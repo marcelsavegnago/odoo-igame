@@ -157,7 +157,7 @@ class Partner(models.Model):
     def _get_table(self):
         for rec in self:
             
-            table_ids = rec.team_player_ids.mapped('table_player_ids').mapped('table_ids')
+            table_ids = rec.team_player_ids.mapped('table_player_ids').mapped('table_id')
             
             doing = table_ids.filtered(
                     lambda tbl: tbl.state == 'doing').sorted('id',reverse=True)
