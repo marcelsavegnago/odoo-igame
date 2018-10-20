@@ -18,7 +18,7 @@ Have a nice time to play game.
         #'account',
     ],
     'data': [
-        #'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'views/top_views.xml',
         'views/game_views.xml',
         'views/deal_views.xml',

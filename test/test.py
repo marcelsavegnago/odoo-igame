@@ -97,6 +97,7 @@ def test4(host=HOST):
     headers = {"content-type": "application/json"  }
     uri = host + '/json/api'
     #fields = ['doing_table_id','todo_table_ids']
+    fields = ['name']
     
     data ={ "model":"res.users",
             "method":"read",
