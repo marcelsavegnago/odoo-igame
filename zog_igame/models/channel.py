@@ -2,28 +2,36 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
+import json
 
 import logging
 _logger = logging.getLogger(__name__)
 
 class Board(models.Model):
     _inherit = "og.board"
-    
+
+    def message_post(self, subject, message):
+        for channel in self.table_id.channel_ids:
+            body = json.dumps(message)
+            channel.message_post(body=body, subject=subject )
+
     @api.multi
     def bid(self, pos, call):
+        self = self.sudo()
         ret = super(Board, self).bid(pos, call)
         if ret:
             return ret
-        
-        for channel in self.table_id.channel_ids:
-            #TBD
+
+        for rec in self:
             subject = 'bid'
-            body  = {
-                table_id: self.table_id.id,
-                board_id: self.id,
+            message  = {
+                'table_id': rec.table_id.id,
+                'board_id': rec.id,
+                'bidder': rec.bidder,
+                'auction': rec.call_ids.read(['pos','name'])
             }
-            channel.message_post(body=body, subject=subject )
-        
+            rec.message_post(subject,message)
+
         return ret
 
     @api.multi
@@ -32,15 +40,6 @@ class Board(models.Model):
         if ret:
             return ret
         
-        for channel in self.table_id.channel_ids:
-            #TBD
-            subject = 'play'
-            body  = {
-                table_id: self.table_id.id,
-                board_id: self.id,
-            }
-            channel.message_post(body=body, subject=subject )
-
         return ret
 
     @api.multi
@@ -49,15 +48,6 @@ class Board(models.Model):
         if ret:
             return ret
         
-        for channel in self.table_id.channel_ids:
-            #TBD
-            subject = 'claim'
-            body  = {
-                table_id: self.table_id.id,
-                board_id: self.id,
-            }
-            channel.message_post(body=body, subject=subject )
-
         return ret
 
     @api.multi
@@ -66,15 +56,6 @@ class Board(models.Model):
         if not ret:
             return ret
         
-        for channel in self.table_id.channel_ids:
-            #TBD
-            subject = 'undo'
-            body  = {
-                table_id: self.table_id.id,
-                board_id: self.id,
-            }
-            channel.message_post(body=body, subject=subject )
-            
         return ret
 
 class Table(models.Model):
@@ -89,9 +70,7 @@ class GameChannel(models.Model):
     table_id = fields.Many2one('og.table')
     
     mail_channel_id = fields.Many2one('mail.channel')
-    #channel_partner_ids = fields.Many2many('res.partner', 
-    #    related='mail_channel_id.channel_partner_ids' )
-        
+
     type = fields.Selection([('all',       'To All'),
                              ('spectator', 'To All Spectators'),
                              ('one',       'To One Spectator'),
@@ -106,27 +85,25 @@ class GameChannel(models.Model):
 
     @api.multi
     def message_get(self, message_id ):
+        uid = self.env.uid
+        print('uid',uid)
         self = self.sudo()
-
-        # TBD,  message format
+        print('uid2',self.env.uid)
         msg = self.env['mail.message'].browse(message_id)
-        #print(msg)
-        subject = msg.subject
+        #subject = msg.subject
         body = msg.body
-        table = self.table_id
-        return { 'test1': subject, 'test2': body }
+        if body[:3] == '<p>' and body[-4:] == '</p>':
+            body = body[3:-4]
 
+        body = json.loads(body)
+        body = {'uid':uid, 'board': body}
+
+        return json.dumps(body)
 
     @api.multi
     @api.returns('self', lambda value: value.id)
     def message_post(self, body='', subject=None ):
         self = self.sudo()
-        
-        # TBD
-        # table_id
-        # get new status from table
-        # and wrap up message to body
-        
         return self.mail_channel_id.message_post(body=body, subject=subject,
                       message_type='comment', subtype='mail.mt_comment')
 

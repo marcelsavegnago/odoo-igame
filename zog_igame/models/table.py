@@ -74,7 +74,8 @@ class Table(models.Model):
     south_id = fields.Many2one('og.game.team.player',
                 compute='_compute_player', inverse='_inverse_player_south')
     table_player_ids = fields.One2many('og.table.player','table_id')
-    player_ids = fields.Many2one('og.game.team.player', compute='_compute_player')
+    player_ids = fields.Many2many('og.game.team.player', compute='_compute_player')
+
 
     @api.multi
     def _compute_player(self):

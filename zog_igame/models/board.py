@@ -49,6 +49,7 @@ class Board(models.Model):
     bidder     = fields.Selection(POSITIONS,compute='_compute_bidder')
 
     @api.multi
+    @api.depends('call_ids','contract_manual','declarer_manual')
     def _compute_contract(self):
         for rec in self:
             if not (rec.declarer_manual and rec.contract_manual):
@@ -60,6 +61,7 @@ class Board(models.Model):
             rec.declarer = rec.declarer_manual
             
     @api.multi
+    @api.depends('declarer','contract')
     def _compute_contract2(self):
         for rec in self:
             ctrct = rec.contract
@@ -74,6 +76,7 @@ class Board(models.Model):
             rec.openleader = dclr and lho(dclr) or None
             
     @api.multi
+    @api.depends('call_ids','contract','dealer')
     def _compute_bidder(self):
         for rec in self:
             if rec.contract:

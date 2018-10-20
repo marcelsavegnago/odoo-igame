@@ -16,8 +16,6 @@ class Message(BusController):
     @http.route('/longpolling/igame', type="json", auth="user")
     def poll2(self, channels, last, options=None):
         msgs = self.poll(channels, last, options)
-        
-        print('msgs',msgs)
         new_msgs = []
 
         for msg in msgs:
@@ -40,12 +38,13 @@ class Message(BusController):
 
         if model != 'mail.channel':
             return None
-            
 
         with registry(db).cursor() as cr:
-            env = api.Environment(cr, request.uid, {})
+            uid = request.env.uid
+            env = api.Environment(cr, uid, {})
             domain = [('mail_channel_id','=',channel_id)]
             game_channel = env['og.channel'].sudo().search([],limit=1)
+            game_channel = game_channel.sudo(uid)
 
             if not game_channel:
                 return None
@@ -55,14 +54,9 @@ class Message(BusController):
             # to unwrap msg['message'].body by message_get
 
             nmsg = msg.copy()
-
-            #msg_id = msg['id']
-            #msg_message = msg['message']
             message_id = msg['message']['id']
             nmsg['msg'] = game_channel.message_get(message_id)
             return nmsg
 
 
         return None
-        
-        """
