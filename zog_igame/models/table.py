@@ -140,11 +140,14 @@ class TablePlayer(models.Model):
     team_id = fields.Many2one('og.game.team', related = 'player_id.team_id')
     position = fields.Selection(POSITIONS, string='Position', default='-')
 
+class GameTeamPlayer(models.Model):
+    _inherit = "og.game.team.player"
+    table_ids = fields.Many2many('og.table','og.table.player','player_id','table_id' )
 
 class Partner(models.Model):
     _inherit = "res.partner"
     
-    table_ids = fields.Many2many('og.table','og.table.player', 'partner_id','table_id' )
+    team_player_ids = fields.One2many('og.team.player' )
 
     doing_table_id = fields.Many2one('og.table', compute='_get_table')
     todo_table_ids = fields.One2many('og.table', compute='_get_table')
@@ -153,15 +156,17 @@ class Partner(models.Model):
     @api.multi
     def _get_table(self):
         for rec in self:
-            doing = rec.table_ids.filtered(
+            table_ids = rec.team_player_ids.mapped('table_ids')
+            
+            doing = table_ids.filtered(
                     lambda tbl: tbl.state == 'doing').sorted('id',reverse=True)
             if doing:     
                 rec.doing_table_id = doing[0]
 
-            rec.todo_table_ids = rec.table_ids.filtered(
+            rec.todo_table_ids = table_ids.filtered(
                     lambda tbl: tbl.state == 'todo').sorted('date_from')
                     
-            rec.done_table_ids = rec.table_ids.filtered(
+            rec.done_table_ids = table_ids.filtered(
                     lambda tbl: tbl.state == 'done').sorted('date_from')
 
             
