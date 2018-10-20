@@ -147,7 +147,7 @@ class GameTeamPlayer(models.Model):
 class Partner(models.Model):
     _inherit = "res.partner"
     
-    team_player_ids = fields.One2many('og.team.player' )
+    team_player_ids = fields.One2many('og.team.player','partner_id' )
 
     doing_table_id = fields.Many2one('og.table', compute='_get_table')
     todo_table_ids = fields.One2many('og.table', compute='_get_table')
