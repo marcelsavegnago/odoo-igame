@@ -27,7 +27,7 @@ class GameTeam(models.Model):
         vals['is_company'] = True
         return super(GameTeam,self).create(vals)
 
-    partner_id = fields.Many2one('res.partner', ondelete='cascade')
+    partner_id = fields.Many2one('res.partner', required=True, ondelete='cascade')
 
     game_id = fields.Many2one('og.game', string='Game', ondelete='cascade')
     group_id = fields.Many2one('og.game.group')
@@ -58,7 +58,7 @@ class GameTeamPlayer(models.Model):
     _inherits = {'res.partner': 'partner_id'}
 
     team_id = fields.Many2one('og.game.team', string='Team', ondelete='restrict')
-    partner_id = fields.Many2one('res.partner', string='Partner',
+    partner_id = fields.Many2one('res.partner', string='Partner', required=True, 
         ondelete='restrict', domain=[['is_company','!=',True]])
 
     role = fields.Selection([

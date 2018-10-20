@@ -14,9 +14,15 @@ class Match(models.Model):
     number = fields.Integer(default=1, help="if a stage of parent." )
 
     round_id = fields.Many2one('og.game.round', string='Round',required=True)
+    
+    
     game_id = fields.Many2one('og.game', related='round_id.game_id')
     deal_ids = fields.Many2many('og.deal',string='Deals', 
                                 related='round_id.deal_ids')
+
+    date_from = fields.Datetime(related='round_id.date_from')
+    date_thru = fields.Datetime(related='round_id.date_thru')
+
     group_id = fields.Many2one('og.game.group')
 
     host_id  = fields.Many2one('og.game.team',required=True,

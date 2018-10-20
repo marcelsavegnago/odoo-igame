@@ -127,7 +127,16 @@ class GameRound(models.Model):
     _description = "Game Round"
     _order = 'number'
 
-    #date = fields.Date()
+    date_from = fields.Datetime('Date From', required=True, 
+        index=True, copy=False, default=fields.Datetime.now )
+        
+    date_thru = fields.Datetime('Date Thru', required=True, 
+        index=True, copy=False, default=fields.Datetime.now )
+
+    _sql_constraints = [
+        ('check_date', "CHECK( date_thru > date_from )",  'date_thru > date_from.'),
+    ]
+
 
     game_id = fields.Many2one('og.game','Game',ondelete='cascade')
     name = fields.Char(compute='_get_name')
@@ -153,3 +162,18 @@ class GameRound(models.Model):
             open  = matchs.mapped('open_table_id')
             close = matchs.mapped('close_table_id')
             rec.table_ids = open | close
+
+    state = fields.Selection([
+        ('done',  'Done'),
+        ('doing', 'Doing'),
+        ('todo',  'Todo'), ], string='Status', compute='_get_state')
+
+    @api.multi
+    def _get_state(self):
+        now = fields.Datetime.now()
+        for rec in self:
+            frm = rec.date_from
+            thru = rec.date_thru
+            rec.state = now < frm and now < thru and 'todo' or (
+                        now >= frm and now >= thru and 'done' or 'doing' )
+

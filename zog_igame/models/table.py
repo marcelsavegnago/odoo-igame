@@ -32,6 +32,10 @@ class Table(models.Model):
                                 compute='_get_round')
     game_id = fields.Many2one('og.game', related='round_id.game_id')
 
+    date_from = fields.Datetime(related='round_id.date_from')
+    date_thru = fields.Datetime(related='round_id.date_thru')
+    state = fields.Selection(related='round_id.state')
+
     @api.multi
     def _get_round(self):
         for rec in self:
@@ -132,7 +136,35 @@ class TablePlayer(models.Model):
 
     table_id = fields.Many2one('og.table')
     player_id = fields.Many2one('og.game.team.player')
+    partner_id = fields.Many2one('res.partner', related='player_id.partner_id')
     team_id = fields.Many2one('og.game.team', related = 'player_id.team_id')
     position = fields.Selection(POSITIONS, string='Position', default='-')
 
 
+class Partner(models.Model):
+    _inherit = "res.partner"
+    
+    table_ids = fields.One2many('og.table','partner_id' )
+
+    doing_table_id = fields.Many2one('og.table', compute='_get_table')
+    todo_table_ids = fields.One2many('og.table', compute='_get_table')
+    done_table_ids = fields.One2many('og.table', compute='_get_table')
+    
+    @api.multi
+    def _get_table(self):
+        for rec in self:
+            doing = rec.table_ids.filtered(
+                    lambda tbl: tbl.state == 'doing').sorted('id',reverse=True)
+            if doing:     
+                rec.doing_table_id = doing[0]
+
+            rec.todo_table_ids = rec.table_ids.filtered(
+                    lambda tbl: tbl.state == 'todo').sorted('date_from')
+                    
+            rec.done_table_ids = rec.table_ids.filtered(
+                    lambda tbl: tbl.state == 'done').sorted('date_from')
+
+            
+        
+        
+        
