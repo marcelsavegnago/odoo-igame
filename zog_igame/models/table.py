@@ -142,7 +142,7 @@ class TablePlayer(models.Model):
 
 class GameTeamPlayer(models.Model):
     _inherit = "og.game.team.player"
-    table_ids = fields.Many2many('og.table','og.table.player','player_id','table_id' )
+    table_player_ids = fields.One2many('og.table.player','player_id')
 
 class Partner(models.Model):
     _inherit = "res.partner"
@@ -156,7 +156,8 @@ class Partner(models.Model):
     @api.multi
     def _get_table(self):
         for rec in self:
-            table_ids = rec.team_player_ids.mapped('table_ids')
+            
+            table_ids = rec.team_player_ids.mapped('table_player_ids').mapped('table_ids')
             
             doing = table_ids.filtered(
                     lambda tbl: tbl.state == 'doing').sorted('id',reverse=True)
