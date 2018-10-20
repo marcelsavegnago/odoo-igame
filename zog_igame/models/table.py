@@ -45,6 +45,18 @@ class Table(models.Model):
     deal_ids  = fields.Many2many('og.deal', string='Deals', related='round_id.deal_ids' )
     board_ids = fields.One2many('og.board', 'table_id', string='Boards')
     board_id = fields.Many2one('og.board', help="The board played now")
+    
+    @api.multi
+    def new_board(self):
+        self.ensure_one()
+        numbers = self.board_ids.mapped('number')
+        deal_no = numbers and max(numbers) or 0
+        deals = rec.deal_ids.filtered(lambda deal: deal.number > deal_no).sorted('number')
+        if not deals:
+            return self.env['og.board']
+        deal = deals[0]
+        return self.env['og.board'].create({'deal_id': deal.id, 'table_id':self.id})
+            
 
     ns_team_id = fields.Many2one('og.game.team', compute='_compute_team')
     ew_team_id = fields.Many2one('og.game.team', compute='_compute_team')
@@ -169,8 +181,3 @@ class Partner(models.Model):
                     
             rec.done_table_ids = table_ids.filtered(
                     lambda tbl: tbl.state == 'done').sorted('date_from')
-
-            
-        
-        
-        
