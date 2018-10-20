@@ -1,5 +1,3 @@
-# coding: utf-8 -*- coding: UTF-8 -*-
-
 import requests
 import json
 
@@ -9,7 +7,6 @@ SERVER = 'TT'
 URI_LOGIN = HOST + '/json/user/login'
 URI_REGISTER = HOST + '/json/user/register'
 URI_RESET_PASSWORD = HOST + '/json/user/reset/password'
-
 URI_API       = HOST + '/json/api'
 
 
@@ -35,17 +32,16 @@ print('t1')
 #t1()
 
 def jsonrpc(uri, data=None, params=None, sid=None, client=None):
-        headers = {"content-type": "application/json"  }
+        headers = {"content-type": "application/json" }
+        if sid:                      
+            headers.update( {"X-Openerp-Session-Id":sid} )
+
+        params1 = params and params.copy() or {}
         data1 = {"jsonrpc":"2.0",
                 "method":"call",
                 "id":123,
                 "params":data and data or {}
                 }
-        
-        params1 = params and params.copy() or {}
-        if sid:                      
-            params1.update( {'session_id':usid} )
-
         
         if not client:
             client=requests
@@ -54,21 +50,20 @@ def jsonrpc(uri, data=None, params=None, sid=None, client=None):
                           data=json.dumps(data1),
                           headers=headers)
         #ret(rspd)
+        #print( 'rspd=', rspd)
         return json.loads(rspd.content).get('result',{})
 
 def execute(sid, model, method, *args, **kwargs ):
     return jsonrpc(URI_API,{'model':model, 'method': method, 'args': args, 'kwargs': kwargs},sid=sid )
 
 api = execute
-        
+
 class UserSudo(object):
     def login(self,user,psw,db=SERVER):
         """  check ok uid
         """
         result = jsonrpc(URI_LOGIN, {'db': db,'login':user, 'password':psw, 'type':'account'} )
-        
-        return result
-        #return result.get('sid',None)
+        return result.get('sid',None)
 
     def register(self,user,psw, db=SERVER):
         """  sudo(), create(), uid
@@ -79,33 +74,37 @@ class UserSudo(object):
         """  sudo(), write(), uid
         """
         return jsonrpc(URI_RESET_PASSWORD, {'db': db,'login':user, 'password':newpsw} )
-    
+        
 print('usid')
-#usid = UserSudo().login('u1','123')
-result = UserSudo().login('A13','123')
-
-usid = result.get('sid',None)
+#usid = UserSudo().login('admin','123')
+usid = UserSudo().login('u1','123')
 print(usid)
 
-uid = result.get('uid',None)
-print(uid, type(uid) )
+
+print( 't4 msg poll')
+def t4(host=HOST):
+    client = requests.session()
+
+    uri = host + '/longpolling/igame'
+
+    last = 0
+    while(1):
+        print 12312312313
+        
+        data = {"channels":[],"last":last }
+        rslt = jsonrpc(uri,data=data,client=client, sid=usid )
+        
+        if not rslt:
+            print( last )
+
+        for r in rslt:
+            #print( r )
+            print( 'last, newid,channel:',last, r['id'], r['channel'])
+            print( r.get('msg') )
+
+        
+        ids = [  r['id'] for r in rslt ] 
+        last =  ids and (  max( ids ) ) or last
 
 
-print( 't4 get partner doing table' )
-
-def test4(host=HOST):
-    headers = {"content-type": "application/json"  }
-    uri = host + '/json/api'
-    #fields = ['doing_table_id','todo_table_ids']
-    
-    data ={ "model":"res.users",
-            "method":"read",
-            "args": [uid,fields],
-            "kwargs":{}
-          }
-    
-
-    return jsonrpc(uri,data=data,sid=usid )
-
-print test4()
-
+t4()
