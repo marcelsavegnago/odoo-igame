@@ -13,12 +13,19 @@ class Board(models.Model):
 
     @api.multi
     def play(self,pos,card):
+        self.ensure_one()
         ret, ccdd = self._check_play(pos, card)
         if ret:
             return ret, ccdd
 
         ccdd.number = 1 + max(self.card_ids.mapped('number') )
-        #self.refresh()
+        
+        if not self.openlead:
+            self.openlead = self._get_openlead()
+        
+        # set state: opendlead -> playing -> done
+        # set result
+        
         return 0
 
     def _check_play(self, pos, card):
@@ -57,6 +64,14 @@ class Board(models.Model):
             return (-5, 'No card')
 
         return (0, cs[0])
+
+    def _get_openlead(self):
+            ts = self._get_tricks()
+            t1 = ts and ts[0] or []
+            t1 = [c for c in t1]
+            t1.sort(key=lambda c: c.number)
+            return t1 and t1[0].name or None
+    
 
     @api.multi
     def claim(self,pos,num):

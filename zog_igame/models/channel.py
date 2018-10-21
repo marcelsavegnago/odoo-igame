@@ -10,6 +10,14 @@ _logger = logging.getLogger(__name__)
 class Board(models.Model):
     _inherit = "og.board"
 
+    @api.multi
+    def _get_my_pos(self):
+        self.ensure_one()
+        tp = self.table_id.table_player_ids.filtered(
+                       lambda tp: tp.partner_id == self.env.user.partner_id)
+        return tp and tp.position or None
+
+
     def message_post(self, subject, message):
         for channel in self.table_id.channel_ids:
             body = json.dumps(message)

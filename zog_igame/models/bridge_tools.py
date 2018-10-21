@@ -74,6 +74,9 @@ def lho(pos):
         return None
     return 'NESW'[ ('NESW'.index(pos) + 1 ) % 4 ]
 
+def rho(pos):
+    return lho(partner(pos))
+
 
 def cmp_gt_call(first, second):
     r1, t1 = int(first[0]), first[1]

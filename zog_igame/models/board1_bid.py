@@ -17,6 +17,8 @@ class Board(models.Model):
 
     @api.multi
     def bid(self, pos, call):
+        self.ensure_one()
+        
         ret = self._check_call(pos, call)
         if ret:
             return ret
@@ -27,6 +29,17 @@ class Board(models.Model):
                 'board_id':self.id, 'number': num }
 
         self.call_ids.create(vals)
+        dclr,contract,rank,trump,risk = self.call_ids._compute_contract()
+        self.contract = contract
+        self.declarer = dclr
+        
+        if contract== PASS:
+            self.state = 'done'
+            self.result = 0
+            
+        else if contract and dclr:
+            self.state = 'playing'
+        
         return 0
 
 

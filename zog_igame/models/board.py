@@ -1,11 +1,46 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+"""
+  state:  bidding  #[ bidding, openleading, playing, done ]
+  number: 2 # [1,2,...16]
+  vulnerable: NS  #[NS,EW,NO,BO],  transposition  
+  dealer:     E,         transposition  
+
+  auction : [1H, Pass] #, south eye,  transposition
+  declarer: S  #          transposition
+  contract: 1Hx
+  dummy =   N  #          transposition
+  
+  player =  S  # bidder,openleader, player, transposition
+
+  openlead = None, 'SA'
+  hands  = {E,S,W,N}
+  
+  last_trick    = [E, [SA,S9,HA,S7] ]
+  current_trick = [S, [SA,S9] ]
+  ns_win = 1
+  ew_win = 2
+
+  claimer,       , transposition
+  claimer_result
+  ns_claim  = 3
+  ew_claim  = 2
+  
+  result   = -1
+  point = 0
+
+"""
+
+"""
+
+"""
+
 from odoo import api, fields, models
 
 import logging
 _logger = logging.getLogger(__name__)
-
+import json
 
 from .bridge_tools import PASS, DBL, RDB, CALLS
 from .bridge_tools import POSITIONS
@@ -14,30 +49,83 @@ from .bridge_tools import SUITS,RANKS,CARDS
 from .bridge_tools import partner, lho
 from .bridge_tools import get_point
 
-
-
 class Board(models.Model):
     _name = "og.board"
     _description = "Board"
     _rec_name = 'number'
     _order = 'number'
 
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('bidding', 'Bidding'),
+        ('openlead','Openlead'),
+        ('playing', 'Playing'),
+        ('done',    'Locked'),
+        ('cancel', 'Cancelled')
+    ], string='Status', default='bidding')
+
     table_id = fields.Many2one('og.table')
     deal_id = fields.Many2one('og.deal')
     card_str = fields.Char(related='deal_id.card_str')
 
+
     name   = fields.Char('Name', related='deal_id.name' )
+    # compute name = 2 NS S 1Hx -3
+    
     number = fields.Integer(related='deal_id.number' )
     dealer = fields.Selection(related='deal_id.dealer' )
     vulnerable = fields.Selection(related='deal_id.vulnerable' )
 
-    call_ids = fields.One2many('og.board.call','board_id')
+    card_ids  = fields.One2many('og.board.card','board_id')
+    @api.model
+    def create(self, vals):
+        deal = vals.get('deal_id')
+        if not deal:
+            return 0
+        nvs = vals.copy()
+        if nvs.get('card_ids'):
+            del nvs['card_ids']
 
-    declarer   = fields.Selection(POSITIONS,compute='_compute_contract')
-    contract =  fields.Selection(CONTRACTS,compute='_compute_contract')
-    
-    declarer_manual   = fields.Selection(POSITIONS )
-    contract_manual =  fields.Selection(CONTRACTS )
+        board = super(Board,self).create(nvs)
+
+        for dc in board.deal_id.card_ids:
+            cards = {'board_id': board.id,'deal_card_id':dc.id }
+            board.card_ids.create(cards)
+
+        return board
+
+    hands = fields.Char(compute='_compute_hands')
+    @api.multi
+    def _compute_hands(self):
+        def fn(cards, pos):
+            cs = cards.filtered(lambda card: card.pos == pos and card.number == 0
+                               ).sorted('id')
+            return [card.name for card in cs ]
+            
+        for rec in self:
+            rec.hands = json.dumps({
+                'E': fn(rec.card_ids,'E')
+                'W': fn(rec.card_ids,'W')
+                'N': fn(rec.card_ids,'N')
+                'S': fn(rec.card_ids,'S')
+            })
+
+    call_ids = fields.One2many('og.board.call','board_id')
+    bidder   = fields.Selection(POSITIONS,compute='_compute_call')
+    auction  = fields.Char(compute='_compute_call')
+    @api.multi
+    @api.depends('call_ids','dealer')
+    def _compute_call(self):
+        for rec in self:
+            cs = rec.call_ids
+            rec.bidder = cs and lho(cs[-1].pos) or rec.dealer
+
+            auction = [ None for i in range('WNES'.index(rec.dealer) % 4) 
+                      ] + [ cd.name for cd in rec.call_ids]
+            rec.auction = json.dumps(auction)
+
+    declarer   = fields.Selection(POSITIONS )
+    contract =  fields.Selection(CONTRACTS )
     
     contract_rank = fields.Integer(compute='_compute_contract2')
     contract_trump = fields.Selection(TRUMPS,compute='_compute_contract2')
@@ -45,20 +133,6 @@ class Board(models.Model):
 
     openleader = fields.Selection(POSITIONS,compute='_compute_contract2')
     dummy      = fields.Selection(POSITIONS,compute='_compute_contract2')
-    
-    bidder     = fields.Selection(POSITIONS,compute='_compute_bidder')
-
-    @api.multi
-    @api.depends('call_ids','contract_manual','declarer_manual')
-    def _compute_contract(self):
-        for rec in self:
-            if not (rec.declarer_manual and rec.contract_manual):
-                dclr,contract,rank,trump,risk = rec.call_ids._compute_contract()
-                rec.contract_manual = contract
-                rec.declarer_manual = dclr
-            
-            rec.contract = rec.contract_manual
-            rec.declarer = rec.declarer_manual
             
     @api.multi
     @api.depends('declarer','contract')
@@ -75,22 +149,11 @@ class Board(models.Model):
             rec.dummy = dclr and partner(dclr) or None
             rec.openleader = dclr and lho(dclr) or None
             
-    @api.multi
-    @api.depends('call_ids','contract','dealer')
-    def _compute_bidder(self):
-        for rec in self:
-            if rec.contract:
-                rec.bidder = None
-                continue
-            cs = rec.call_ids
-            rec.bidder = cs and lho(cs[-1].pos) or rec.dealer or None
-
-    openlead = fields.Selection(CARDS, compute='_compute_openlead')
-    openlead_manual = fields.Selection(CARDS)
+    openlead = fields.Selection(CARDS )
 
     player = fields.Selection(POSITIONS,compute='_compute_player')
-    last_trick =  fields.One2many('og.board.card',compute='_compute_trick')
-    current_trick=fields.One2many('og.board.card',compute='_compute_trick')
+    last_trick =  fields.Char(compute='_compute_trick')
+    current_trick=fields.Char(compute='_compute_trick')
 
     def _get_tricks(self):
         """All Played Cards """
@@ -104,23 +167,27 @@ class Board(models.Model):
         return self._get_tricks()
 
     @api.multi
+    @api.depends('card_ids' )
     def _compute_trick(self):
         for rec in self:
             ts = rec._get_tricks()
-            rec.last_trick = ( ts and len(ts)>=2 and ts[-2]
-                             ) or rec.env['og.board.card']
-
-            rec.current_trick = ( ts and ts[-1]
-                                ) or rec.env['og.board.card']
+            lt = ( ts and len(ts)>=2 and ts[-2] ) or []
+            lt = lt and [ lt[0].pos,[ t.name for t in lt]] or None
+            rec.last_trick = json.dumps(lt)
+            ct = ( ts and ts[-1] ) or []
+            ct = ct and [ ct[0].pos,[ t.name for t in ct]] or None
+            rec.current_trick  = json.dumps(ct)
 
     @api.multi
+    @api.depends('declarer','card_ids','state')
     def _compute_player(self):
         def fn(rec):
             ts = rec._get_tricks()
             ct = ts and ts[-1] or None
 
             if not ct:
-                return rec.openleader
+                dclr = rec.declarer
+                return dclr and lho(dclr) or None
             elif len(ct)<4:
                 ct = [c for c in ct]
                 ct.sort(key=lambda c: c.number)
@@ -129,37 +196,26 @@ class Board(models.Model):
                 return ct.get_winner(rec.contract_trump)
 
         for rec in self:
-            rec.player = fn(rec)
+            if rec.state == 'bidding':
+                rec.player = rec.bidder
+            else if rec.state == 'openlead':
+                dclr = rec.declarer
+                rec.player = dclr and lho(dclr) or None
+            else if rec.state == 'playing':
+                rec.player = fn(rec)
+            else:
+                rec.player = None
+
+    ns_win = fields.Integer(compute='_compute_win')
+    ew_win = fields.Integer(compute='_compute_win')
 
     @api.multi
-    def _compute_openlead(self):
-        def fn(rec):
-            ts = rec._get_tricks()
-            t1 = ts and ts[0] or []
-            t1 = [c for c in t1]
-            t1.sort(key=lambda c: c.number)
-            return t1 and t1[0].name or None
-
-        for rec in self:
-            if not rec.openlead_manual:
-                rec.openlead_manual = fn(rec)
-
-            rec.openlead = rec.openlead_manual
-
-
-    declarer_win = fields.Integer(compute='_compute_win')
-    opp_win = fields.Integer(compute='_compute_win')
-    ns_win  = fields.Integer(compute='_compute_win')
-    ew_win  = fields.Integer(compute='_compute_win')
-
-    @api.multi
+    @api.depends('card_ids')
     def _compute_win(self):
         for rec in self:
-            dclr, opp, ns, ew = rec._get_win()
-            rec.declarer_win = dclr
-            rec.opp_win = opp
-            rec.ns_win  = ns
-            rec.ew_win  = ew
+            ns, ew = rec._get_win()
+            rec.ns_win = ns
+            rec.ew_win = ew
 
     def _get_win(self):
         ts = self._get_tricks()
@@ -174,26 +230,19 @@ class Board(models.Model):
         ns = sum( [ win[0] for win in nsew ] )
         ew = sum( [ win[1] for win in nsew ] )
 
-        if not self.declarer:
-            dclr, opp = 0, 0
-        else:
-            dclr, opp = self.declarer in 'NS' and (ns, ew
-                                             ) or (ew, ns)
-        return dclr, opp, ns, ew
+        return ns, ew
 
     claimer = fields.Selection(POSITIONS)
     claim_result = fields.Integer()
-    declarer_claim = fields.Integer(compute='_compute_claim')
-    opp_claim = fields.Integer(compute='_compute_claim')
+    
     ns_claim  = fields.Integer(compute='_compute_claim')
     ew_claim  = fields.Integer(compute='_compute_claim')
 
     @api.multi
+    @api.depends('claimer','claim_result')
     def _compute_claim(self):
         for rec in self:
-            dclr, opp, ns, ew = rec._get_claim()
-            rec.declarer_claim = dclr
-            rec.opp_claim = opp
+            ns, ew = rec._get_claim()
             rec.ns_claim  = ns
             rec.ew_claim  = ew
 
@@ -201,37 +250,36 @@ class Board(models.Model):
         dclr, opp, ns, ew = 0, 0, 0, 0
 
         if not self.claimer:
-            return dclr, opp, ns, ew
+            return ns, ew
 
-        rest = 13 - self.declarer_win - self.opp_win
+        rest = 13 - self.ns_win - self.ew_win
         fst, scd = self.claim_result, rest - self.claim_result
 
-        dclr, opp = self.claimer==self.declarer and (fst, scd
-                                               ) or (scd, fst)
-        ns, ew = self.declarer in 'NS' and (dclr, opp
-                                      ) or (opp, dclr)
-        return dclr, opp, ns, ew
+        ns, ew = self.claimer in 'NS' and (fst, scd) or (scd, fst)
+        return ns, ew
 
 
     trick_count = fields.Integer(compute='_compute_trick_cnt')
 
     @api.multi
+    @api.depends('ns_win','ew_win', 'ns_claim', 'ew_claim')
     def _compute_trick_cnt(self):
         for rec in self:
-            cnt = rec.declarer_win + rec.opp_win
-            cnt += rec.declarer_claim + rec.opp_claim
+            cnt = rec.ns_win + rec.ew_win + rec.ns_claim + rec.ew_claim
             rec.trick_count = cnt
 
     result = fields.Integer(compute='_compute_result')
-    result2 = fields.Char(compute='_compute_result2')
+    #result2 = fields.Char(compute='_compute_result2')
 
     @api.multi
+    @api.depends('contract','declarer', 'ns_win', 'ns_claim')
     def _compute_result(self):
         def fn(rec):
             if not rec.contract or rec.contract == PASS or rec.trick_count<13:
                 return 0
 
-            rslt = rec.declarer_win + rec.declarer_claim
+            rslt = rec.ns_win + rec.ns_claim
+            rslt = (rec.declarer in 'NS' and [rslt] or [13-rslt] )[0]
             rslt -= (rec.contract_rank + 6)
             return rslt
             
@@ -271,6 +319,7 @@ class Board(models.Model):
     ew_point = fields.Integer(compute='_compute_point')
 
     @api.multi
+    @api.depends('contract','declarer', 'result')
     def _compute_point(self):
         for rec in self:
             rec.point, rec.ns_point, rec.ew_point = rec._get_point()
@@ -303,23 +352,4 @@ class Board(models.Model):
         
         ns, ew = self.declarer in 'NS' and (dclr, opp) or (opp,dclr)
         return point, ns, ew
-
-    card_ids  = fields.One2many('og.board.card','board_id')
-
-    @api.model
-    def create(self, vals):
-        deal = vals.get('deal_id')
-        if not deal:
-            return 0
-        nvs = vals.copy()
-        if nvs.get('card_ids'):
-            del nvs['card_ids']
-
-        board = super(Board,self).create(nvs)
-
-        for dc in board.deal_id.card_ids:
-            cards = {'board_id': board.id,'deal_card_id':dc.id }
-            board.card_ids.create(cards)
-
-        return board
 

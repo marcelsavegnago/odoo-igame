@@ -100,7 +100,7 @@ class DealCard(models.Model):
     name = fields.Selection(CARDS)
     suit = fields.Selection(SUITS,compute='_compute_suit_rank')
     rank = fields.Selection(RANKS,compute='_compute_suit_rank')
-    pos  = fields.Selection(POSITIONS)
+    position  = fields.Selection(POSITIONS, oldname='pos')
 
     @api.multi
     def _compute_suit_rank(self):
