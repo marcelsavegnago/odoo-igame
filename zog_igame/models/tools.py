@@ -20,6 +20,10 @@ def imp2vp(imp,deal_count):
     # N : Deal count
     # M : Imp diff
     """
+    if not deal_count:
+        return 10
+    
+    
     M = abs(imp)
     N = deal_count
 
