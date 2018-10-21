@@ -104,10 +104,10 @@ class Board(models.Model):
             
         for rec in self:
             rec.hands = json.dumps({
-                'E': fn(rec.card_ids,'E')
-                'W': fn(rec.card_ids,'W')
-                'N': fn(rec.card_ids,'N')
-                'S': fn(rec.card_ids,'S')
+                'E': fn(rec.card_ids,'E'),
+                'W': fn(rec.card_ids,'W'),
+                'N': fn(rec.card_ids,'N'),
+                'S': fn(rec.card_ids,'S'),
             })
 
     call_ids = fields.One2many('og.board.call','board_id')
