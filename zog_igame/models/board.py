@@ -103,12 +103,12 @@ class Board(models.Model):
             return [card.name for card in cs ]
             
         for rec in self:
-            rec.hands = json.dumps({
-                'E': fn(rec.card_ids,'E'),
-                'W': fn(rec.card_ids,'W'),
-                'N': fn(rec.card_ids,'N'),
-                'S': fn(rec.card_ids,'S'),
-            })
+            rec.hands = json.dumps([
+                fn(rec.card_ids,'W'),
+                fn(rec.card_ids,'N'),
+                fn(rec.card_ids,'E'),
+                fn(rec.card_ids,'S'),
+            ])
 
     call_ids = fields.One2many('og.board.call','board_id')
     bidder   = fields.Selection(POSITIONS,compute='_compute_call')
@@ -119,9 +119,12 @@ class Board(models.Model):
         for rec in self:
             cs = rec.call_ids
             rec.bidder = cs and lho(cs[-1].pos) or rec.dealer
+            
+            nn = rec.dealer and 'WNES'.index(rec.dealer) or 0
 
-            auction = [ None for i in range('WNES'.index(rec.dealer) % 4) 
+            auction = [ None for i in range( nn % 4) 
                       ] + [ cd.name for cd in rec.call_ids]
+                      
             rec.auction = json.dumps(auction)
 
     declarer   = fields.Selection(POSITIONS )
@@ -198,10 +201,10 @@ class Board(models.Model):
         for rec in self:
             if rec.state == 'bidding':
                 rec.player = rec.bidder
-            else if rec.state == 'openlead':
+            elif rec.state == 'openlead':
                 dclr = rec.declarer
                 rec.player = dclr and lho(dclr) or None
-            else if rec.state == 'playing':
+            elif rec.state == 'playing':
                 rec.player = fn(rec)
             else:
                 rec.player = None
@@ -269,7 +272,7 @@ class Board(models.Model):
             rec.trick_count = cnt
 
     result = fields.Integer(compute='_compute_result')
-    #result2 = fields.Char(compute='_compute_result2')
+    result2 = fields.Char(compute='_compute_result2')
 
     @api.multi
     @api.depends('contract','declarer', 'ns_win', 'ns_claim')
@@ -325,7 +328,9 @@ class Board(models.Model):
             rec.point, rec.ns_point, rec.ew_point = rec._get_point()
 
     def _get_point(self):
-        #if self.trick_count<13 or self.contract == PASS:
+        if not self.contract:
+            return 0, 0, 0
+
         if self.trick_count<13:
             return 0, 0, 0
 

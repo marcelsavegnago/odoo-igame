@@ -96,11 +96,12 @@ class DealCard(models.Model):
     _name = "og.deal.card"
     _description = "Deal Card"
 
-    deal_id = fields.Many2one('og.deal')
+    deal_id = fields.Many2one('og.deal',ondelete='cascade')
     name = fields.Selection(CARDS)
     suit = fields.Selection(SUITS,compute='_compute_suit_rank')
     rank = fields.Selection(RANKS,compute='_compute_suit_rank')
-    position  = fields.Selection(POSITIONS, oldname='pos')
+    pos  = fields.Selection(POSITIONS, related = 'position')
+    position  = fields.Selection(POSITIONS)
 
     @api.multi
     def _compute_suit_rank(self):

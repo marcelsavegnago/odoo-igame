@@ -37,7 +37,7 @@ class Board(models.Model):
             self.state = 'done'
             self.result = 0
             
-        else if contract and dclr:
+        elif contract and dclr:
             self.state = 'playing'
         
         return 0

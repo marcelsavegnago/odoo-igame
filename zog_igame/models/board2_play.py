@@ -84,7 +84,10 @@ class Board(models.Model):
 
         self.claimer = pos
         self.claim_result = num
-        #self.refresh()
+
+        # set state: opendlead -> playing -> done
+        # set result
+
         return 0
 
     def _check_claim(self,pos, num):
