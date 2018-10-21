@@ -76,30 +76,15 @@ class Board(models.Model):
     dealer = fields.Selection(related='deal_id.dealer' )
     vulnerable = fields.Selection(related='deal_id.vulnerable' )
 
-    card_ids  = fields.One2many('og.board.card','board_id')
-    @api.model
-    def create(self, vals):
-        deal = vals.get('deal_id')
-        if not deal:
-            return 0
-        nvs = vals.copy()
-        if nvs.get('card_ids'):
-            del nvs['card_ids']
-
-        board = super(Board,self).create(nvs)
-
-        for dc in board.deal_id.card_ids:
-            cards = {'board_id': board.id,'deal_card_id':dc.id }
-            board.card_ids.create(cards)
-
-        return board
-
     hands = fields.Char(compute='_compute_hands')
     @api.multi
     def _compute_hands(self):
         def fn(cards, pos):
             cs = cards.filtered(lambda card: card.pos == pos and card.number == 0
                                ).sorted('id')
+            
+            # filtered , only  on hand
+            
             return [card.name for card in cs ]
             
         for rec in self:
@@ -357,4 +342,22 @@ class Board(models.Model):
         
         ns, ew = self.declarer in 'NS' and (dclr, opp) or (opp,dclr)
         return point, ns, ew
+
+    card_ids  = fields.One2many('og.board.card','board_id')
+    @api.model
+    def create(self, vals):
+        deal = vals.get('deal_id')
+        if not deal:
+            return 0
+        nvs = vals.copy()
+        if nvs.get('card_ids'):
+            del nvs['card_ids']
+
+        board = super(Board,self).create(nvs)
+
+        for dc in board.deal_id.card_ids:
+            cards = {'board_id': board.id,'deal_card_id':dc.id }
+            board.card_ids.create(cards)
+
+        return board
 
