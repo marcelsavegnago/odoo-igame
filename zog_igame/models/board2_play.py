@@ -14,8 +14,6 @@ class Board(models.Model):
     @api.multi
     def play(self,pos,card):
         self.ensure_one()
-        if self.state not in ['openlead', 'playing']:
-            return -11, 'no playing or openlead'
         
         ret, ccdd = self._check_play(pos, card)
         if ret:
@@ -36,6 +34,9 @@ class Board(models.Model):
         return 0
 
     def _check_play(self, pos, card):
+        if self.state not in ['openlead', 'playing']:
+            return -11, 'state is not playing or openlead'
+
         if not ( self.contract and self.declarer):
             return (-1,'bidding, not Play ')
 
@@ -93,6 +94,8 @@ class Board(models.Model):
         """ 
         num :  the number to get from unplayed tricks by pos
         """
+        self.ensure_one()
+
         ret = self._check_claim(pos, num)
         if ret:
             return ret
@@ -100,12 +103,16 @@ class Board(models.Model):
         self.claimer = pos
         self.claim_result = num
 
-        # set state: opendlead -> playing -> done
-        # set result
+        if self.trick_count>=13:
+            self.state = 'done'
+            self.result = self._get_result()
 
         return 0
 
     def _check_claim(self,pos, num):
+        if self.state not in ['playing']:
+            return -11, 'state is not playing'
+
         if self.claimer:
             return (-1,'Claim again.')
 

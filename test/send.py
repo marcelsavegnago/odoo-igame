@@ -219,8 +219,10 @@ def play():
     self.read()
     player = self.player
     flag, pos, card = self.get_random_play()
+    print flag, pos, card
     if flag:
         self.play(pos, card)
+    else:
 
     self.read()
     print 'tricks', self.last_trick,self.current_trick
