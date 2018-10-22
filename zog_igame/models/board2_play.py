@@ -27,7 +27,7 @@ class Board(models.Model):
             self.openlead = self._get_openlead()
         
         if self.state in ['openlead']:
-            self.state = playing
+            self.state = 'playing'
         
         if self.trick_count>=13:
             self.state = 'done'
