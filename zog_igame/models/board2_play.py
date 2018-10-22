@@ -158,7 +158,7 @@ class Board(models.Model):
             self.state = 'claiming,' + opp
             return 0
             
-        if opp == self.state.split(',')[1]
+        if opp == self.state.split(',')[1]:
             return -1, 'claim ok again'
 
         self.state = 'done'
