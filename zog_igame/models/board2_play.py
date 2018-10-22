@@ -118,7 +118,7 @@ class Board(models.Model):
         if self.claimer:
             return (-1,'Claim again.')
             
-        if self.claimer != self.declarer:
+        if pos != self.declarer:
             return (-1,'Claimed by Decalrer please.')
 
         rest = 13 - (self.ns_win + self.ew_win)

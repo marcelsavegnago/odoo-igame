@@ -182,11 +182,15 @@ class Board( object ):
         return rec
         
 
+
     def get_random_call(self):
         return execute(self.sid,self.model,'get_random_call',self.id)
     
     def get_random_play(self):
         return execute(self.sid,self.model,'get_random_play',self.id)
+    
+    def get_random_claim(self):
+        return execute(self.sid,self.model,'get_random_claim',self.id)
     
     
     def bid(self,pos,call):
@@ -251,7 +255,22 @@ def read():
     print 'tricks', self.last_trick,self.current_trick
     print 'result', self.result, self.point, self.ns_point,self.ew_point
 
-read()
+def claim():
+    self.read()
+    pos, num = self.get_random_claim()
+    pos = self.declarer
+    print pos, num
+    print self.claim(pos, num)
+    self.read()
+    print 'hands',self.hands
+    print 'tricks', self.last_trick,self.current_trick
+    print 'win',self.ns_win, self.ew_win
+    print 'state,player',self.state,self.player
+    print 'result', self.result, self.point, self.ns_point,self.ew_point
+   
+claim()
+ 
+#read()
 #bid()
 
 #play()
