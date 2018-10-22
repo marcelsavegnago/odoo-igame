@@ -19,6 +19,9 @@ class Board(models.Model):
     def bid(self, pos, call):
         self.ensure_one()
         
+        if self.state != 'bidding':
+            return (-11, 'no bidding')
+        
         ret = self._check_call(pos, call)
         if ret:
             return ret

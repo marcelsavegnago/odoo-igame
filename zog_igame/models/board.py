@@ -158,7 +158,7 @@ class Board(models.Model):
     @api.depends('card_ids' )
     def _compute_trick(self):
         def fn(trick):
-            num = trick and 'WNES'.index( trick[0].pos ) and 0
+            num = trick and 'WNES'.index( trick[0].pos ) or 0
             trick = [None for i in range(num)] + [ t.name for t in trick]
             return json.dumps(trick)
         
@@ -257,25 +257,11 @@ class Board(models.Model):
             cnt = rec.ns_win + rec.ew_win + rec.ns_claim + rec.ew_claim
             rec.trick_count = cnt
 
-    result = fields.Integer(compute='_compute_result')
+    result = fields.Integer()
     result2 = fields.Char(compute='_compute_result2')
 
     @api.multi
-    @api.depends('contract','declarer', 'ns_win', 'ns_claim')
-    def _compute_result(self):
-        def fn(rec):
-            if not rec.contract or rec.contract == PASS or rec.trick_count<13:
-                return 0
-
-            rslt = rec.ns_win + rec.ns_claim
-            rslt = (rec.declarer in 'NS' and [rslt] or [13-rslt] )[0]
-            rslt -= (rec.contract_rank + 6)
-            return rslt
-            
-        for rec in self:
-            rec.result = fn(rec)
-
-    @api.multi
+    @api.depends('contract','declarer', 'trick_count', 'result')
     def _compute_result2(self):
         def fn(rec):
             if not rec.contract:

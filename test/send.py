@@ -140,26 +140,92 @@ def t3(host=HOST):
 
 print( 't4 bid then msg post' )
 
-def bid(args,host=HOST):
-    headers = {"content-type": "application/json"  }
-    uri = host + '/json/api'
+class Board( object ):
     
-    data ={ "model":"og.board",
-            "method":"bid",
-            "args": args,
-            "kwargs":{}
-          }
+    def __init__(self,sid,bd_id):
+        self.sid = usid
+        self.id = bd_id
+        self.model = "og.board"
+        
+        self.fields = ['number','vulnerable','dealer','hands',
+            'auction',
+            'declarer',
+            'contract',
+            'last_trick',
+            'current_trick',
+            'ns_win','ew_win',
+            'player',
+            'state',
+            
+            ]
+
+    def read(self):
+        rec = execute(self.sid,self.model,"read",self.id,self.fields)
+        self.number = rec[0]['number']
+        self.vulnerable = rec[0]['vulnerable']
+        self.dealer = rec[0]['dealer']
+        self.hands = rec[0]['hands']
+        self.auction = rec[0]['auction']
+        self.declarer = rec[0]['declarer']
+        self.contract = rec[0]['contract']
+        self.last_trick = rec[0]['last_trick']
+        self.current_trick = rec[0]['current_trick']
+        self.ns_win = rec[0]['ns_win']
+        self.ew_win = rec[0]['ew_win']
+        self.player = rec[0]['player']
+        self.state = rec[0]['state']
+        
+        return rec
+        
+
+    def get_random_call(self):
+        return execute(self.sid,self.model,'get_random_call',self.id)
     
+    def get_random_play(self):
+        return execute(self.sid,self.model,'get_random_play',self.id)
+    
+    
+    def bid(self,pos,call):
+        return execute(self.sid,self.model,"bid",self.id,pos,call)
 
-    return jsonrpc(uri,data=data,sid=usid )
+    def play(self,pos,card):
+        return execute(self.sid,self.model,"play",self.id,pos,card)
 
-board_id = 3
 
-bid([board_id,'N','Pass'])
-bid([board_id,'E','Pass'])
-bid([board_id,'S','Pass'])
-bid([board_id,'W','3S'])
-bid([board_id,'N','Pass'])
-bid([board_id,'E','Pass'])
-bid([board_id,'S','Pass'])
+board = Board(usid,3)
+self = board
 
+def bid():
+    rec = board.read()
+    print 'deal', self.number, self.vulnerable, self.dealer
+    print 'hands',self.hands
+    print 'state,player',self.state,self.player
+    print 'auction',self.auction
+    print 'contract',self.declarer, self.contract
+
+    player = board.player
+    call = board.get_random_call()
+    print player, call
+    print board.bid(player,call)
+    self.read()
+    print 'auction',self.auction
+    print 'contract',self.declarer, self.contract
+    print 'tricks', self.last_trick,self.current_trick
+    print 'win',self.ns_win, self.ew_win
+
+    print 'state,player',self.state,self.player
+
+def play():
+    self.read()
+    player = self.player
+    flag, pos, card = self.get_random_play()
+    if flag:
+        self.play(pos, card)
+
+    self.read()
+    print 'tricks', self.last_trick,self.current_trick
+    print 'win',self.ns_win, self.ew_win
+
+    print 'state,player',self.state,self.player
+
+play()

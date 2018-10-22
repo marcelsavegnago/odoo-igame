@@ -14,6 +14,9 @@ class Board(models.Model):
     @api.multi
     def play(self,pos,card):
         self.ensure_one()
+        if self.state not in ['openlead', 'playing']:
+            return -11, 'no playing or openlead'
+        
         ret, ccdd = self._check_play(pos, card)
         if ret:
             return ret, ccdd
@@ -23,8 +26,12 @@ class Board(models.Model):
         if not self.openlead:
             self.openlead = self._get_openlead()
         
-        # set state: opendlead -> playing -> done
-        # set result
+        if self.state in ['openlead']:
+            self.state = playing
+        
+        if self.trick_count>=13:
+            self.state = 'done'
+            self.result = self._get_result()
         
         return 0
 
@@ -71,7 +78,15 @@ class Board(models.Model):
             t1 = [c for c in t1]
             t1.sort(key=lambda c: c.number)
             return t1 and t1[0].name or None
-    
+
+    def _get_result(self):
+            if not self.contract or self.contract == PASS or self.trick_count<13:
+                return 0
+
+            rslt = self.ns_win + self.ns_claim
+            rslt = (self.declarer in 'NS' and [rslt] or [13-rslt] )[0]
+            rslt -= (self.contract_rank + 6)
+            return rslt
 
     @api.multi
     def claim(self,pos,num):
