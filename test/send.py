@@ -153,7 +153,7 @@ class Board( object ):
             'contract',
             'last_trick',
             'current_trick',
-            'ns_win','ew_win',
+            'ns_win','ew_win','result','point','ns_point','ew_point',
             'player',
             'state',
             
@@ -174,6 +174,10 @@ class Board( object ):
         self.ew_win = rec[0]['ew_win']
         self.player = rec[0]['player']
         self.state = rec[0]['state']
+        self.result = rec[0]['result']
+        self.point = rec[0]['point']
+        self.ns_point = rec[0]['ns_point']
+        self.ew_point = rec[0]['ew_point']
         
         return rec
         
@@ -190,6 +194,9 @@ class Board( object ):
 
     def play(self,pos,card):
         return execute(self.sid,self.model,"play",self.id,pos,card)
+        
+    def claim(self,pos,num):
+        return execute(self.sid,self.model,"claim",self.id,pos,num)
 
 
 board = Board(usid,3)
@@ -223,11 +230,15 @@ def play():
     if flag:
         self.play(pos, card)
     else:
+        self.claim(pos, card)
 
     self.read()
     print 'tricks', self.last_trick,self.current_trick
     print 'win',self.ns_win, self.ew_win
-
     print 'state,player',self.state,self.player
+    print 'result', self.result, self.point, self.ns_point,self.ew_point
+
+
+
 
 play()

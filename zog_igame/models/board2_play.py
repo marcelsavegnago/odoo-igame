@@ -3,6 +3,8 @@
 
 from odoo import api, fields, models
 
+from .bridge_tools import PASS
+
 import logging
 _logger = logging.getLogger(__name__)
 
