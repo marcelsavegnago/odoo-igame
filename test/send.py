@@ -199,7 +199,7 @@ class Board( object ):
         return execute(self.sid,self.model,"claim",self.id,pos,num)
 
 
-board = Board(usid,3)
+board = Board(usid,6)
 self = board
 
 def bid():
@@ -212,6 +212,8 @@ def bid():
 
     player = board.player
     call = board.get_random_call()
+    #player = 'N'
+    #call = '2D'
     print player, call
     print board.bid(player,call)
     self.read()
@@ -233,12 +235,23 @@ def play():
         self.claim(pos, card)
 
     self.read()
+    print 'hands',self.hands
     print 'tricks', self.last_trick,self.current_trick
     print 'win',self.ns_win, self.ew_win
     print 'state,player',self.state,self.player
     print 'result', self.result, self.point, self.ns_point,self.ew_point
 
+def read():
+    self.read()
+    print 'deal', self.number, self.vulnerable, self.dealer
+    print 'hands',self.hands
+    print 'auction',self.auction
+    print 'contract',self.declarer, self.contract
+    print 'win',self.ns_win, self.ew_win
+    print 'tricks', self.last_trick,self.current_trick
+    print 'result', self.result, self.point, self.ns_point,self.ew_point
 
+read()
+#bid()
 
-
-play()
+#play()

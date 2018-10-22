@@ -106,8 +106,8 @@ class Board(models.Model):
         self.claim_result = num
 
         if self.trick_count>=13:
-            self.state = 'done'
-            self.result = self._get_result()
+            self.state = 'claiming'
+            #self.result = self._get_result()
 
         return 0
 
@@ -117,6 +117,9 @@ class Board(models.Model):
 
         if self.claimer:
             return (-1,'Claim again.')
+            
+        if self.claimer != self.declarer:
+            return (-1,'Claimed by Decalrer please.')
 
         rest = 13 - (self.ns_win + self.ew_win)
         if num<0:
@@ -130,6 +133,39 @@ class Board(models.Model):
         if pos in [self.dummy]:
             return (-3,'Claimed position is dummy')
         return 0
+
+    @api.multi
+    def claim_ok(self,pos):
+        if not pos:
+            return -1, 'not pos'
+        if pos not in ['WNES']:
+            return -1, 'not pos'
+        
+        if self.state not in ['claiming','claiming,LHO','claiming,RHO']:
+            return -1, 'state not in claiming'
+
+        if not self.declarer:
+            return -1, 'not declarer'
+            
+        dlcr = self.declarer
+        
+        if pos not in [lho(dclr), rho(dclr)]:
+            return -1, 'not pos'
+        
+        opp = {lho(dclr):'LHO', rho(dclr):'RHO'}[pos]
+        
+        if self.state in ['claiming']:
+            self.state = 'claiming,' + opp
+            return 0
+            
+        if opp == self.state.split(',')[1]
+            return -1, 'claim ok again'
+
+        self.state = 'done'
+        self.result = self._get_result()
+        
+        return 0
+
 
     @api.multi
     def undo(self):

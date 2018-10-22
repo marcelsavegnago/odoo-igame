@@ -17,8 +17,9 @@
   openlead = None, 'SA'
   hands  = {E,S,W,N}
   
-  last_trick    = [E, [SA,S9,HA,S7] ]
-  current_trick = [S, [SA,S9] ]
+  tricks = [[trick],[trick]]
+  last_trick    = [None, None,SA,S9,HA,S7] #[W,N,E,S,W,N,E]
+  current_trick = [None,SA,S9]
   ns_win = 1
   ew_win = 2
 
@@ -30,9 +31,6 @@
   result   = -1
   point = 0
 
-"""
-
-"""
 
 """
 
@@ -60,6 +58,9 @@ class Board(models.Model):
         ('bidding', 'Bidding'),
         ('openlead','Openlead'),
         ('playing', 'Playing'),
+        ('claiming', 'Claiming'),
+        ('claiming,LHO', 'Claiming,LHO'),
+        ('claiming,RHO', 'Claiming,RHO'),
         ('done',    'Locked'),
         ('cancel', 'Cancelled')
     ], string='Status', default='bidding')
@@ -140,6 +141,7 @@ class Board(models.Model):
     openlead = fields.Selection(CARDS )
 
     player = fields.Selection(POSITIONS,compute='_compute_player')
+    tricks =  fields.Char(compute='_compute_trick')
     last_trick =  fields.Char(compute='_compute_trick')
     current_trick=fields.Char(compute='_compute_trick')
 
@@ -166,6 +168,8 @@ class Board(models.Model):
             ts = rec._get_tricks()
             rec.last_trick = fn(ts and len(ts)>=2 and ts[-2] or [])
             rec.current_trick  = fn(ts and ts[-1] or [])
+            rec.tricks = [ fn(trick) for trick in ts]
+            
 
     @api.multi
     @api.depends('declarer','card_ids','state')

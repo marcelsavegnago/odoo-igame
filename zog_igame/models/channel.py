@@ -25,7 +25,7 @@ class Board(models.Model):
 
     @api.multi
     def bid(self, pos, call):
-        self = self.sudo()
+        #self = self.sudo()
         ret = super(Board, self).bid(pos, call)
         if ret:
             return ret
