@@ -157,7 +157,7 @@ class Board(models.Model):
     @api.multi
     @api.depends('card_ids' )
     def _compute_trick(self):
-        def fn(trick)
+        def fn(trick):
             num = trick and 'WNES'.index( trick[0].pos ) and 0
             trick = [None for i in range(num)] + [ t.name for t in trick]
             return json.dumps(trick)
