@@ -157,14 +157,15 @@ class Board(models.Model):
     @api.multi
     @api.depends('card_ids' )
     def _compute_trick(self):
+        def fn(trick)
+            num = trick and 'WNES'.index( trick[0].pos ) and 0
+            trick = [None for i in range(num)] + [ t.name for t in trick]
+            return json.dumps(trick)
+        
         for rec in self:
             ts = rec._get_tricks()
-            lt = ( ts and len(ts)>=2 and ts[-2] ) or []
-            lt = lt and [ lt[0].pos,[ t.name for t in lt]] or None
-            rec.last_trick = json.dumps(lt)
-            ct = ( ts and ts[-1] ) or []
-            ct = ct and [ ct[0].pos,[ t.name for t in ct]] or None
-            rec.current_trick  = json.dumps(ct)
+            rec.last_trick = fn(ts and len(ts)>=2 and ts[-2] or [])
+            rec.current_trick  = fn(ts and ts[-1] or [])
 
     @api.multi
     @api.depends('declarer','card_ids','state')

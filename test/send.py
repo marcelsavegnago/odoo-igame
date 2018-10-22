@@ -153,10 +153,13 @@ def bid(args,host=HOST):
 
     return jsonrpc(uri,data=data,sid=usid )
 
-bid([4,'E','Pass'])
-bid([4,'S','Pass'])
-bid([4,'W','3S'])
-bid([4,'N','Pass'])
-bid([4,'E','Pass'])
-bid([4,'S','Pass'])
+board_id = 3
+
+bid([board_id,'N','Pass'])
+bid([board_id,'E','Pass'])
+bid([board_id,'S','Pass'])
+bid([board_id,'W','3S'])
+bid([board_id,'N','Pass'])
+bid([board_id,'E','Pass'])
+bid([board_id,'S','Pass'])
 

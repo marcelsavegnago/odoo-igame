@@ -38,7 +38,7 @@ class Board(models.Model):
             self.result = 0
             
         elif contract and dclr:
-            self.state = 'playing'
+            self.state = 'openlead'
         
         return 0
 
