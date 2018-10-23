@@ -138,7 +138,7 @@ class Board(models.Model):
     def claim_ok(self,pos):
         if not pos:
             return -1, 'not pos'
-        if pos not in ['WNES']:
+        if pos not in 'WNES':
             return -2, 'not pos'
         
         if self.state not in ['claiming','claiming,LHO','claiming,RHO']:
