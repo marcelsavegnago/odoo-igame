@@ -120,7 +120,7 @@ class GameGroup(models.Model):
     name = fields.Char('Name', required=True )
     sequence = fields.Integer()
     game_id = fields.Many2one('og.game','Game', required=True, ondelete='cascade',
-        domain=['org_type','in', ['swiss','circle']] )
+        domain=[('org_type','in', ['swiss','circle'])] )
     team_ids = fields.One2many('og.game.team','group_id',string='Teams')
 
 class GameRound(models.Model):
