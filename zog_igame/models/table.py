@@ -47,6 +47,7 @@ class Table(models.Model):
     board_id = fields.Many2one('og.board', help="The board played now")
     
     @api.multi
+    @api.returns('self')
     def get_board(self):
         self.ensure_one()
         bd = self.board_ids.filtered(lambda bd: bd.state not in ['done','cancel'])
