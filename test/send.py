@@ -66,7 +66,7 @@ class UserSudo(object):
         """  check ok uid
         """
         result = jsonrpc(URI_LOGIN, {'db': db,'login':user, 'password':psw, 'type':'account'} )
-        return result.get('sid',None)
+        return result
 
     def register(self,user,psw, db=SERVER):
         """  sudo(), create(), uid
@@ -79,8 +79,7 @@ class UserSudo(object):
         return jsonrpc(URI_RESET_PASSWORD, {'db': db,'login':user, 'password':newpsw} )
     
 print('usid')
-#usid = UserSudo().login('u1','123')
-usid = UserSudo().login('admin','123')
+usid = UserSudo().login('admin','123').get('sid',None)
 print(usid)
 
 
@@ -140,14 +139,85 @@ def t3(host=HOST):
 
 print( 't4 bid then msg post' )
 
-class Board( object ):
-    
-    def __init__(self,sid,bd_id):
+class BaseModel(object):
+    def __init__(self,sid,bd_id=None):
         self.sid = usid
         self.id = bd_id
-        self.model = "og.board"
+
+    def read(self):
+        rec = execute(self.sid,self.model,"read",self.id,self.fields)
+        for field in self.fields:
+            setattr(self, field, rec[0][field])
+        return rec
+
+    def search(self,domain=[]):
+        rec = execute(self.sid,self.model,"search",domain)
+        return rec
+
+    def search_read(self,domain=[]):
+        rec = execute(self.sid,self.model,"search_read",domain, self.fields)
+        for field in self.fields:
+            setattr(self, field, rec[0][field])
+        return rec
         
-        self.fields = ['number','vulnerable','dealer','hands',
+    def name_search(self,name):
+        rec = execute(self.sid,self.model,"name_search",name )
+        self.read()
+        return rec
+        
+    def create(self,vals):
+        return execute(self.sid,self.model,"create",vals)
+        
+    def write(self,vals):
+        return execute(self.sid,self.model,"write", self.id, vals)
+        
+    def unlink(self):
+        return execute(self.sid,self.model,"create", self.id)
+
+class Partner( BaseModel ):
+    model = "res.partner"
+    fields = ['name']
+
+class User( BaseModel ):
+    model = "res.users"
+    fields = ['name']
+
+class Game( BaseModel ):
+    model = "og.game"
+    fields = ['name','group_ids','round_ids','team_ids','deal_ids']
+    
+class GameGroup( BaseModel ):
+    model = "og.game.group"
+    fields = ['name','game_id','team_ids']
+
+class GameRound( BaseModel ):
+    model = "og.game.round"
+    fields = ['name','number','game_id','date_from','date_thru','deal_ids']
+
+class Deal( BaseModel ):
+    model = "og.deal"
+    fields = ['name','number','card_str','game_id','round_id','dealer','vulnerable',
+           'card_ids','board_ids']
+
+class GameTeam( BaseModel ):
+    model = "og.game.team"
+    fields = ['name','number','game_id','group_id','player_ids',
+        'roundinfo_ids',
+        'score','score_manual','score_uom']
+
+class GameTeamPlayer( BaseModel ):
+    model = "og.game.team.player"
+    fields = ['name','team_id','role']
+
+class GameTeamRoundInfo( BaseModel ):
+    model = "og.game.team.round.info"
+    fields = ['name','team_id','game_id','group_id','round_id','match_id',
+        'score','score_manual','score_uom']
+    
+
+class Board( BaseModel ):
+    model = "og.board"
+    fields = ['number','vulnerable','dealer','hands',
             'auction',
             'declarer',
             'contract',
@@ -159,30 +229,9 @@ class Board( object ):
             'state',
             
             ]
-
-    def read(self):
-        rec = execute(self.sid,self.model,"read",self.id,self.fields)
-        self.number = rec[0]['number']
-        self.vulnerable = rec[0]['vulnerable']
-        self.dealer = rec[0]['dealer']
-        self.hands = rec[0]['hands']
-        self.auction = rec[0]['auction']
-        self.declarer = rec[0]['declarer']
-        self.contract = rec[0]['contract']
-        self.tricks = rec[0]['tricks']
-        self.last_trick = rec[0]['last_trick']
-        self.current_trick = rec[0]['current_trick']
-        self.ns_win = rec[0]['ns_win']
-        self.ew_win = rec[0]['ew_win']
-        self.player = rec[0]['player']
-        self.state = rec[0]['state']
-        self.result = rec[0]['result']
-        self.point = rec[0]['point']
-        self.ns_point = rec[0]['ns_point']
-        self.ew_point = rec[0]['ew_point']
-        
-        return rec
-        
+    
+    def __init__(self,*args):
+        super(Board, self).__init__(*args)
 
 
     def get_random_call(self):
@@ -207,63 +256,246 @@ class Board( object ):
     def claim_ok(self,pos):
         return execute(self.sid,self.model,"claim_ok",self.id,pos)
 
+def test_board():
 
-board = Board(usid,6)
-self = board
+    board = Board(usid,6)
+    self = board
 
-def bid():
-    rec = board.read()
-    player = board.player
-    call = board.get_random_call()
-    #player = 'N'
-    #call = '2D'
-    print player, call
-    print board.bid(player,call)
+    def bid():
+        rec = board.read()
+        player = board.player
+        call = board.get_random_call()
+        print player, call
+        print board.bid(player,call)
 
-def play():
-    self.read()
-    player = self.player
-    flag, pos, card = self.get_random_play()
-    print flag, pos, card
-    if flag:
-        self.play(pos, card)
-    else:
-        self.claim(pos, card)
+    def play():
+        self.read()
+        player = self.player
+        flag, pos, card = self.get_random_play()
+        print flag, pos, card
+        if flag:
+            self.play(pos, card)
+        else:
+            self.claim(pos, card)
 
-def read():
-    self.read()
-    print 'deal', self.number, self.vulnerable, self.dealer
-    print 'hands',self.hands
-    print 'auction',self.auction
-    print 'contract',self.declarer, self.contract
-    print 'win',self.ns_win, self.ew_win
-    print 'tricks', self.tricks
-    print 'tricks', self.last_trick,self.current_trick
-    print 'result', self.result, self.point, self.ns_point,self.ew_point
-    print 'state,player',self.state,self.player
+    def read():
+        self.read()
+        print 'deal', self.number, self.vulnerable, self.dealer
+        print 'hands',self.hands
+        print 'auction',self.auction
+        print 'contract',self.declarer, self.contract
+        print 'win',self.ns_win, self.ew_win
+        print 'tricks', self.tricks
+        print 'tricks', self.last_trick,self.current_trick
+        print 'result', self.result, self.point, self.ns_point,self.ew_point
+        print 'state,player',self.state,self.player
 
-def claim():
-    self.read()
-    pos, num = self.get_random_claim()
-    pos = self.declarer
-    print pos, num
-    print self.claim(pos, num)
-    self.read()
+    def claim():
+        self.read()
+        pos, num = self.get_random_claim()
+        pos = self.declarer
+        print pos, num
+        print self.claim(pos, num)
+        self.read()
    
-#claim()
-def claim_ok_lho():
-    self.read()
-    pos = self.declarer
-    print self.claim_ok('S')
+    #claim()
+    def claim_ok_lho():
+        self.read()
+        pos = self.declarer
+        print self.claim_ok('S')
     
-def claim_ok_rho():
-    self.read()
-    pos = self.declarer
-    print self.claim_ok('N')
+    def claim_ok_rho():
+        self.read()
+        pos = self.declarer
+        print self.claim_ok('N')
     
-claim_ok_lho() 
-claim_ok_rho() 
-read()
-#bid()
+    #claim_ok_lho() 
+    #claim_ok_rho() 
+    #bid()
+    #play()
+    read()
 
-#play()
+def test_partner():
+
+    self = Partner(usid,1)
+    print self.read()
+
+def test_user():
+
+    self = User(usid,1)
+    print self.read()
+    print self.name
+    
+    def create(name):
+        self.create({
+            'login':name,
+            'password': '123',
+              'ref':'123',
+              'name':name,
+              'email':name
+        })
+    
+    print self.search_read( [] )
+    
+    ret = UserSudo().login('A24','123')
+    print(ret)
+    
+def test_game():
+    
+    self = Game(usid)
+    
+    def create(name):
+        id = self.create({'name':name})
+        self.id = id
+        
+    def search(name):
+        self.id = self.search_read([['name','=',name]] )[0]['id']
+
+    #create('中国赛')
+    search('中国赛')
+    print self.read()
+    print self.name
+    
+    GroupObj = GameGroup(usid)
+    RoundObj = GameRound(usid)
+    
+    def create_group(game_id,name):
+        GroupObj.create({
+            'name': name,
+            'game_id': game_id
+        })
+    
+    def create_round(game_id,name,number,date_from,date_thru):
+        RoundObj.create({
+            'game_id': game_id,
+            'name': name,
+            'number': number,
+            'date_from': date_from,
+            'date_thru': date_thru,
+        })
+
+    #create_group(self.id, 'A')
+    #create_round(self.id, '1', 1, '2018-10-26 8:00:00','2018-10-26 11:00:00')
+    
+    print self.read()
+    GroupObj.id = self.group_ids
+    RoundObj.id = self.round_ids
+    print GroupObj.read()
+    print RoundObj.read()
+
+def test_deal():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    round = GameRound(usid)
+    round.id = game.round_ids[0]
+    
+    deal = Deal(usid)
+    
+    def create(round_id, number, cards = None):
+        vals = {'round_id': round_id, 'number': number}
+        if cards:
+            vals['card_str'] = cards
+        deal.id = deal.create(vals)
+    
+    #create(round.id,1)
+    #create(round.id,2,'AKQJT98765432... .AKQJT98765432.. ..AKQJT98765432. ...AKQJT98765432')
+    #print deal.read()
+    #print deal.read()
+    
+    print deal.search_read()
+    deal.id = deal.search()
+    print deal.read()
+    
+def test_round_deal():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    round = GameRound(usid)
+    round.id = game.round_ids[0]
+    
+    deal = Deal(usid)
+    deal.id = deal.search()
+    print deal.read()
+    
+    round.write({'deal_ids': [(6,0,deal.id)] })
+    print round.read()
+
+def test_team():
+    game = Game(usid)
+    def search_game(name):
+        game.id = self.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    team = GameTeam(usid)
+    
+    def create(game_id,name):
+        team.id = team.create({'game_id': game_id, 'name': name})
+    
+    def search(name):
+        team.id = team.search_read([['name','=',name]])[0]['id']
+    
+    #create(game.id, 'A1')
+    search( 'A1')
+    print team.read()
+    
+    #create(game.id, 'A2')
+    search( 'A2')
+    print team.read()
+    
+def test_team_player():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    team = GameTeam(usid)
+    def search_team(name):
+        team.id = team.search_read([['name','=',name]])[0]['id']
+    
+    search_team( 'A1')
+    
+    def create(name):
+        player = GameTeamPlayer(usid)
+        
+        ptn = Partner(usid)
+        ptn.id = ptn.name_search(name)[0][0]
+        
+        player.create({
+            'team_id': team.id, 'partner_id': ptn.id, 'role':'player'
+        })
+    
+    for name in ['A11','A12','A13','A14']:
+        pass
+        #create(name)
+    print team.read()
+    
+    search_team( 'A2')
+    for name in ['A21','A22','A23','A24']:
+        pass
+        #create(name)
+    
+    print team.read()
+
+def test_set_group():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+
+    group = GameGroup(usid)
+    group.id = game.group_ids[0]
+    
+    team = GameTeam(usid)
+    
+    team.id = game.team_ids
+    #team.write({'group_id': group.id   })
+    print team.read()
+
+    
+
