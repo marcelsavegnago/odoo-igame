@@ -57,7 +57,6 @@ from .bridge_tools import get_point
 class Board(models.Model):
     _name = "og.board"
     _description = "Board"
-    _rec_name = 'number'
     _order = 'number'
 
     state = fields.Selection([
@@ -66,9 +65,9 @@ class Board(models.Model):
         ('openlead','Openlead'),
         ('playing', 'Playing'),
         ('claiming', 'Claiming'),
-        ('claiming,LHO', 'Claiming,LHO'),
-        ('claiming,RHO', 'Claiming,RHO'),
-        ('done',    'Locked'),
+        ('claiming.LHO', 'Claiming.LHO'),
+        ('claiming.RHO', 'Claiming.RHO'),
+        ('done',    'Done'),
         ('cancel', 'Cancelled')
     ], string='Status', default='bidding')
 
@@ -201,7 +200,7 @@ class Board(models.Model):
             elif rec.state == 'openlead':
                 dclr = rec.declarer
                 rec.player = dclr and lho(dclr) or None
-            elif rec.state in ['playing','claiming','claiming,LHO','claiming,RHO']:
+            elif rec.state in ['playing','claiming','claiming.LHO','claiming.RHO']:
                 rec.player = fn(rec)
             else:
                 rec.player = None

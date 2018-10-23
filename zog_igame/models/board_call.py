@@ -17,7 +17,7 @@ class BoardCall(models.Model):
     _description = "Board Call"
     _order = 'number'
 
-    board_id = fields.Many2one('og.board')
+    board_id = fields.Many2one('og.board',required=True, ondelete='cascade')
 
     number = fields.Integer()
     pos   = fields.Selection(POSITIONS)

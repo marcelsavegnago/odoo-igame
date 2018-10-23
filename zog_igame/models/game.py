@@ -145,7 +145,7 @@ class GameRound(models.Model):
 
     game_id = fields.Many2one('og.game','Game', required=True, ondelete='cascade')
     name = fields.Char(compute='_get_name')
-    number = fields.Integer('Number', required=True)
+    number = fields.Integer('Number', default=1, required=True)
 
     @api.multi
     def _get_name(self):

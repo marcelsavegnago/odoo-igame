@@ -144,7 +144,7 @@ class Board(models.Model):
         if pos not in 'WNES':
             return -2, 'not pos'
         
-        if self.state not in ['claiming','claiming,LHO','claiming,RHO']:
+        if self.state not in ['claiming','claiming.LHO','claiming.RHO']:
             return -3, 'state not in claiming'
 
         if not self.declarer:

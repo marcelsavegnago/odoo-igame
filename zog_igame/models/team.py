@@ -72,7 +72,7 @@ class GameTeamPlayer(models.Model):
         ('coach',      'Coach'),
         ('leader',  'Leader'),
         ('player',     'Player')
-    ], string='Role')
+    ], string='Role', default='player')
 
 
 class GameTeamRoundInfo(models.Model):
