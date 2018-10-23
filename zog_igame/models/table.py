@@ -55,7 +55,7 @@ class Table(models.Model):
         
         numbers = self.board_ids.mapped('number')
         deal_no = numbers and max(numbers) or 0
-        deals = rec.deal_ids.filtered(lambda deal: deal.number > deal_no).sorted('number')
+        deals = self.deal_ids.filtered(lambda deal: deal.number > deal_no).sorted('number')
         if not deals:
             return self.env['og.board']
         deal = deals[0]

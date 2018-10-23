@@ -245,6 +245,10 @@ class Table( BaseModel ):
         'east_id','west_id','north_id','south_id',
         ]
 
+    def get_board(self ):
+        rec = execute(self.sid,self.model,"get_board",self.id)
+        return rec
+
 class TablePlayer( BaseModel ):
     model = "og.table.player"
     fields = ['name','table_id','player_id','position',
@@ -308,7 +312,7 @@ def test_user_play():
     
     table = Table(usid,tid)
     print table.read()
-    print table.new_board()
+    print table.get_board()
     
 
 test_user_play()
