@@ -4,6 +4,7 @@
 from odoo import api, fields, models
 
 from .bridge_tools import PASS
+from .bridge_tools import partner, lho, rho
 
 import logging
 _logger = logging.getLogger(__name__)
