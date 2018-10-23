@@ -13,7 +13,7 @@ class Match(models.Model):
     name = fields.Char('Name' )
     number = fields.Integer(default=1, help="if a stage of parent." )
 
-    round_id = fields.Many2one('og.game.round', string='Round',required=True)
+    round_id = fields.Many2one('og.game.round', string='Round',required=True, ondelete='restrict')
     
     
     game_id = fields.Many2one('og.game', related='round_id.game_id')
@@ -23,9 +23,9 @@ class Match(models.Model):
     date_from = fields.Datetime(related='round_id.date_from')
     date_thru = fields.Datetime(related='round_id.date_thru')
 
-    group_id = fields.Many2one('og.game.group')
+    group_id = fields.Many2one('og.game.group', required=True, ondelete='restrict')
 
-    host_id  = fields.Many2one('og.game.team',required=True,
+    host_id  = fields.Many2one('og.game.team',required=True, 
         compute='_compute_team', inverse='_inverse_team_host')
     guest_id = fields.Many2one('og.game.team',required=True,
         compute='_compute_team', inverse='_inverse_team_guest')
@@ -187,8 +187,8 @@ class MatchLine(models.Model):
 
     name = fields.Char('Name' )
 
-    match_id = fields.Many2one('og.match', ondelete='cascade')
-    deal_id = fields.Many2one('og.deal')
+    match_id = fields.Many2one('og.match', required=True, ondelete='cascade')
+    deal_id = fields.Many2one('og.deal', required=True, ondelete='restrict')
 
     host_id  = fields.Many2one(related='match_id.host_id')
     guest_id = fields.Many2one(related='match_id.guest_id')

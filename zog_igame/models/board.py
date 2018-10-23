@@ -2,7 +2,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 """
-  state:  bidding  #[ bidding, openleading, playing, done ]
+  
+  LHO, UP , RHO, DOWN
+  LURD
+  WNES
+  
+  
+  state:  bidding  #[ bidding, openleading, playing, 
+                   # claiming, claiming.LRO, claiming.RHO, done ]
   number: 2 # [1,2,...16]
   vulnerable: NS  #[NS,EW,NO,BO],  transposition  
   dealer:     E,         transposition  
@@ -15,7 +22,7 @@
   player =  S  # bidder,openleader, player, transposition
 
   openlead = None, 'SA'
-  hands  = {E,S,W,N}
+  hands  = [W N E S]
   
   tricks = [[trick],[trick]]
   last_trick    = [None, None,SA,S9,HA,S7] #[W,N,E,S,W,N,E]

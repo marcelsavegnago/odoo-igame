@@ -11,6 +11,9 @@ _logger = logging.getLogger(__name__)
 class Game(models.Model):
     """
     Game
+    
+    required
+
 
     """
     _name = "og.game"
@@ -28,7 +31,7 @@ class Game(models.Model):
         ('chess', 'Chess'),
         ('go','Go'),
         ('ddz','Doudizhu'),
-    ],default='bridge'    )
+    ], required=True, default='bridge'    )
 
     match_type = fields.Selection([('team', 'Team'),
                                    ('pair', 'Pair') ],default='team')
@@ -78,7 +81,8 @@ class Game(models.Model):
 
     notes = fields.Text('Notes')
 
-    parent_id = fields.Many2one('og.game', string='Parent Game', index=True, ondelete='restrict')
+    parent_id = fields.Many2one('og.game', string='Parent Game', index=True, 
+        domain=['org_type','not in', ['swiss','circle']], ondelete='restrict')
     parent_left = fields.Integer(string='Left parent', index=True)
     parent_right = fields.Integer(string='Right parent', index=True)
     sequence = fields.Integer(default=10, help="Sequence of Children")
@@ -113,10 +117,11 @@ class GameGroup(models.Model):
     _description = "Game Group"
     _order = 'sequence, name'
 
-    name = fields.Char('Name')
+    name = fields.Char('Name', required=True )
     sequence = fields.Integer()
-    game_id = fields.Many2one('og.game','Game',ondelete='cascade')
-    team_ids = fields.One2many('og.game.team','group_id',string='Teams',ondelete='cascade')
+    game_id = fields.Many2one('og.game','Game', required=True, ondelete='cascade',
+        domain=['org_type','in', ['swiss','circle']] )
+    team_ids = fields.One2many('og.game.team','group_id',string='Teams')
 
 class GameRound(models.Model):
     """
@@ -138,9 +143,9 @@ class GameRound(models.Model):
     ]
 
 
-    game_id = fields.Many2one('og.game','Game',ondelete='cascade')
+    game_id = fields.Many2one('og.game','Game', required=True, ondelete='cascade')
     name = fields.Char(compute='_get_name')
-    number = fields.Integer('Number')
+    number = fields.Integer('Number', required=True)
 
     @api.multi
     def _get_name(self):

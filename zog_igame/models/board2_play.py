@@ -136,7 +136,9 @@ class Board(models.Model):
         return 0
 
     @api.multi
-    def claim_ok(self,pos):
+    def claim_ok(self,pos, ok=None):
+        """ claim ok, not ok """
+        
         if not pos:
             return -1, 'not pos'
         if pos not in 'WNES':

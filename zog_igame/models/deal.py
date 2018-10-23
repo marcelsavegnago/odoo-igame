@@ -39,7 +39,7 @@ class Deal(models.Model):
     round_id = fields.Many2one('og.game.round', string='Round')
     game_id = fields.Many2one('og.game', related='round_id.game_id')
 
-    number = fields.Integer(default=1 )
+    number = fields.Integer(default=1 ,required=True )
     dealer = fields.Selection(POSITIONS, compute='_compute_name')
     vulnerable = fields.Selection(VULNERABLES,
                               compute='_compute_name')
@@ -51,7 +51,7 @@ class Deal(models.Model):
 
     card_str = fields.Char(compute ='_compute_cards',
                             inverse='_inverse_cards',
-                            default=_default_cards, help='Full Deal')
+                            default=_default_cards, required=True, help='Full Deal')
 
     notes = fields.Text('Notes')
     card_ids = fields.One2many('og.deal.card', 'deal_id', string='Cards')
@@ -96,7 +96,7 @@ class DealCard(models.Model):
     _name = "og.deal.card"
     _description = "Deal Card"
 
-    deal_id = fields.Many2one('og.deal',ondelete='cascade')
+    deal_id = fields.Many2one('og.deal', required=True, ondelete='cascade')
     name = fields.Selection(CARDS)
     suit = fields.Selection(SUITS,compute='_compute_suit_rank')
     rank = fields.Selection(RANKS,compute='_compute_suit_rank')

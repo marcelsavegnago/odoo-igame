@@ -146,8 +146,8 @@ class TablePlayer(models.Model):
 
     name = fields.Char('Name', related = 'player_id.name' )
 
-    table_id = fields.Many2one('og.table')
-    player_id = fields.Many2one('og.game.team.player')
+    table_id = fields.Many2one('og.table', required=True, ondelete='cascade')
+    player_id = fields.Many2one('og.game.team.player', required=True, ondelete='restrict')
     partner_id = fields.Many2one('res.partner', related='player_id.partner_id')
     team_id = fields.Many2one('og.game.team', related = 'player_id.team_id')
     position = fields.Selection(POSITIONS, string='Position', default='-')

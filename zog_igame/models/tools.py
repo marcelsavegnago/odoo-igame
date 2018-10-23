@@ -36,3 +36,4 @@ def imp2vp(imp,deal_count):
 
     return imp>0 and 10+z or 10-z
 
+

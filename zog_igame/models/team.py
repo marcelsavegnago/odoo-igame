@@ -27,16 +27,24 @@ class GameTeam(models.Model):
         vals['is_company'] = True
         return super(GameTeam,self).create(vals)
 
+    @api.multi
+    def unlink(self):
+        ptn = self.mapped('partner_id')
+        ret = super(GameTeam,self).unlink()
+        ptn.unlink()
+        return ret
+
     partner_id = fields.Many2one('res.partner', required=True, ondelete='cascade')
 
     game_id = fields.Many2one('og.game', string='Game', ondelete='cascade')
     group_id = fields.Many2one('og.game.group')
-    number = fields.Integer('Number', default=0)
+    number = fields.Integer('Number', default=1)
 
-    score = fields.Float(compute='_compute_score')
-    score_manual = fields.Float(default=0)
+    score = fields.Float(compute='_compute_score' )
+    score_manual = fields.Float(default=0 )
     score_uom = fields.Selection(related='game_id.score_uom')
-
+    
+    #TBD rank 2018-10-23
     #rank = fields.Integer()
     #ns_rank = fields.Integer()
     #ew_rank = fields.Integer()
@@ -57,7 +65,7 @@ class GameTeamPlayer(models.Model):
 
     _inherits = {'res.partner': 'partner_id'}
 
-    team_id = fields.Many2one('og.game.team', string='Team', ondelete='restrict')
+    team_id = fields.Many2one('og.game.team', string='Team', required=True, ondelete='cascade')
     partner_id = fields.Many2one('res.partner', string='Partner', required=True, 
         ondelete='restrict', domain=[['is_company','!=',True]])
 
@@ -74,13 +82,13 @@ class GameTeamRoundInfo(models.Model):
 
 
     #name = fields.Char()
-    team_id = fields.Many2one('og.game.team', string='Team', ondelete='restrict')
+    team_id = fields.Many2one('og.game.team', string='Team', required=True, ondelete='restrict')
     game_id = fields.Many2one('og.game', related='team_id.game_id')
 
     #For Team Match
     group_id = fields.Many2one('og.game.group', related='team_id.group_id')
-    round_id = fields.Many2one('og.game.round', string='Round')
-    match_id = fields.Many2one('og.match', string='Match', ondelete='cascade')
+    round_id = fields.Many2one('og.game.round', string='Round', required=True, ondelete='restrict')
+    match_id = fields.Many2one('og.match', string='Match', ondelete='restrict')
 
     #For Pair Match
     #position = fields.Selection(related='team_id.position')

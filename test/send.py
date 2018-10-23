@@ -151,6 +151,7 @@ class Board( object ):
             'auction',
             'declarer',
             'contract',
+            'tricks',
             'last_trick',
             'current_trick',
             'ns_win','ew_win','result','point','ns_point','ew_point',
@@ -168,6 +169,7 @@ class Board( object ):
         self.auction = rec[0]['auction']
         self.declarer = rec[0]['declarer']
         self.contract = rec[0]['contract']
+        self.tricks = rec[0]['tricks']
         self.last_trick = rec[0]['last_trick']
         self.current_trick = rec[0]['current_trick']
         self.ns_win = rec[0]['ns_win']
@@ -211,25 +213,12 @@ self = board
 
 def bid():
     rec = board.read()
-    print 'deal', self.number, self.vulnerable, self.dealer
-    print 'hands',self.hands
-    print 'state,player',self.state,self.player
-    print 'auction',self.auction
-    print 'contract',self.declarer, self.contract
-
     player = board.player
     call = board.get_random_call()
     #player = 'N'
     #call = '2D'
     print player, call
     print board.bid(player,call)
-    self.read()
-    print 'auction',self.auction
-    print 'contract',self.declarer, self.contract
-    print 'tricks', self.last_trick,self.current_trick
-    print 'win',self.ns_win, self.ew_win
-
-    print 'state,player',self.state,self.player
 
 def play():
     self.read()
@@ -241,13 +230,6 @@ def play():
     else:
         self.claim(pos, card)
 
-    self.read()
-    print 'hands',self.hands
-    print 'tricks', self.last_trick,self.current_trick
-    print 'win',self.ns_win, self.ew_win
-    print 'state,player',self.state,self.player
-    print 'result', self.result, self.point, self.ns_point,self.ew_point
-
 def read():
     self.read()
     print 'deal', self.number, self.vulnerable, self.dealer
@@ -255,8 +237,10 @@ def read():
     print 'auction',self.auction
     print 'contract',self.declarer, self.contract
     print 'win',self.ns_win, self.ew_win
+    print 'tricks', self.tricks
     print 'tricks', self.last_trick,self.current_trick
     print 'result', self.result, self.point, self.ns_point,self.ew_point
+    print 'state,player',self.state,self.player
 
 def claim():
     self.read()
@@ -265,26 +249,20 @@ def claim():
     print pos, num
     print self.claim(pos, num)
     self.read()
-    print 'hands',self.hands
-    print 'tricks', self.last_trick,self.current_trick
-    print 'win',self.ns_win, self.ew_win
-    print 'state,player',self.state,self.player
-    print 'result', self.result, self.point, self.ns_point,self.ew_point
    
 #claim()
 def claim_ok_lho():
     self.read()
     pos = self.declarer
     print self.claim_ok('S')
-    print 'state,player',self.state,self.player
     
 def claim_ok_rho():
     self.read()
     pos = self.declarer
     print self.claim_ok('N')
-    print 'state,player',self.state,self.player
     
 claim_ok_lho() 
+claim_ok_rho() 
 read()
 #bid()
 

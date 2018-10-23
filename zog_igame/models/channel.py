@@ -93,6 +93,9 @@ class GameChannel(models.Model):
 
     @api.multi
     def message_get(self, message_id ):
+        """
+        Who am I?
+        """
         uid = self.env.uid
         print('uid',uid)
         self = self.sudo()
