@@ -192,7 +192,7 @@ class GameGroup( BaseModel ):
 
 class GameRound( BaseModel ):
     model = "og.game.round"
-    fields = ['name','number','game_id','date_from','date_thru','deal_ids']
+    fields = ['name','number','game_id','date_from','date_thru','deal_ids','match_ids']
 
 class Deal( BaseModel ):
     model = "og.deal"
@@ -213,7 +213,29 @@ class GameTeamRoundInfo( BaseModel ):
     model = "og.game.team.round.info"
     fields = ['name','team_id','game_id','group_id','round_id','match_id',
         'score','score_manual','score_uom']
-    
+
+class Match( BaseModel ):
+    model = "og.match"
+    fields = ['name','number','game_id','round_id','group_id',
+        'host_id','guest_id','match_team_ids',
+        'table_ids','open_table_id','close_table_id',
+        'line_ids',
+        'host_imp','guest_imp','imp_manual',
+        'host_vp','guest_vp','vp_manual',
+        ]
+
+class MatchTeam( BaseModel ):
+    model = "og.match.team"
+    fields = ['name','match_id','team_id','position','vp']
+
+class MatchLine( BaseModel ):
+    model = "og.match.line"
+    fields = ['name','match_id','deal_id','host_id','guest_id',
+        'open_table_id','close_table_id', 
+        'open_board_id','close_board_id',
+        'open_declarer', 'open_contract', 'open_result', 'open_point', 'open_ns_point', 'open_ew_point',
+        'close_declarer','close_contract','close_result','close_point','close_ns_point','close_ew_point',
+    ]
 
 class Board( BaseModel ):
     model = "og.board"
@@ -492,10 +514,134 @@ def test_set_group():
     group.id = game.group_ids[0]
     
     team = GameTeam(usid)
-    
     team.id = game.team_ids
     #team.write({'group_id': group.id   })
     print team.read()
 
+def test_match():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    round = GameRound(usid)
+    round.id = game.round_ids[0]
+
+    group = GameGroup(usid)
+    group.id = game.group_ids[0]
+    
+    team = GameTeam(usid)
+    team.id = game.team_ids
+    
+    def create(number,round_id,group_id,host_id,guest_id):
+        Match(usid).create({
+          'number': number,
+          'round_id': round_id,
+          'group_id': group_id,
+          'host_id': host_id,
+          'guest_id': guest_id
+        })
+    
+    #create(1,round.id,group.id,team.id[0],team.id[1])
+    
+    print round.read()
+    print round.match_ids
+    print Match(usid,round.match_ids).read()
+
+class Table( BaseModel ):
+    model = "og.table"
+    fields = ['name','number','room_type','match_id','game_id','round_id',
+        'date_from','date_thru','deal_ids', 'board_ids','board_id',
+        'ns_team_id','ew_team_id','table_player_ids','player_ids',
+        'east_id','west_id','north_id','south_id',
+        ]
+
+class TablePlayer( BaseModel ):
+    model = "og.table.player"
+    fields = ['name','table_id','player_id','position',
+        'match_id','partner_id','team_id', ]
+
+def test_table():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    round = GameRound(usid)
+    round.id = game.round_ids[0]
+    round.read()
+    print round.match_ids
+    
+    match = Match(usid, round.match_ids[0])
+    
+    def create(name,number,room_type,match_id):
+        Table(usid).create({
+            'name': name,
+            'number': number,
+            'room_type': room_type,
+            'match_id': match_id
+        })
+    
+    #create('open.1',1,'open',match.id)
+    #create('close.1',1,'close',match.id)
+    
+    match.read()
+    tid = match.table_ids
+    print tid
+    print Table(usid, tid ).read()
+
+def test_table_player():
+    game = Game(usid)
+    def search_game(name):
+        game.id = game.search_read([['name','=',name]] )[0]['id']
+    search_game('中国赛')
+    
+    round = GameRound(usid)
+    round.id = game.round_ids[0]
+    round.read()
+    
+    match = Match(usid, round.match_ids[0])
+    match.read()
+    
+    
+    def write(tbl, n,s,e,w):
+        tbl.write({
+            'north_id': n,
+            'south_id': s,
+            'east_id': e,
+            'west_id': w,
+        })
+    
+    table = Table(usid, match.table_ids[0] )
+    table.read()
+    team = GameTeam(usid)
+    team.id = table.ns_team_id[0]
+    team.read()
+    n,s,nn,ss = team.player_ids
+    
+    team.id = table.ew_team_id[0]
+    team.read()
+    e,w,ee,ww = team.player_ids
+    #write(table,n,s,e,w)
+
+    table = Table(usid, match.table_ids[1] )
+    table.read()
+    team = GameTeam(usid)
+    team.id = table.ns_team_id[0]
+    team.read()
+    nn,ss,n,s = team.player_ids
+    
+    team.id = table.ew_team_id[0]
+    team.read()
+    ee,ww,e,w = team.player_ids
+    #write(table,n,s,e,w)
+
+
+    table = Table(usid, match.table_ids[0] )
+    print table.read()
     
 
+    table = Table(usid, match.table_ids[0] )
+    print table.read()
+
+test_table_player()
