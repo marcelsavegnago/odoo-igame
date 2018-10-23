@@ -180,7 +180,7 @@ class Partner( BaseModel ):
 
 class User( BaseModel ):
     model = "res.users"
-    fields = ['name']
+    fields = ['name','doing_table_id','todo_table_ids','done_table_ids']
 
 class Game( BaseModel ):
     model = "og.game"
@@ -237,6 +237,20 @@ class MatchLine( BaseModel ):
         'close_declarer','close_contract','close_result','close_point','close_ns_point','close_ew_point',
     ]
 
+class Table( BaseModel ):
+    model = "og.table"
+    fields = ['name','number','room_type','match_id','game_id','round_id',
+        'date_from','date_thru','deal_ids', 'board_ids','board_id',
+        'ns_team_id','ew_team_id','table_player_ids','player_ids',
+        'east_id','west_id','north_id','south_id',
+        ]
+
+class TablePlayer( BaseModel ):
+    model = "og.table.player"
+    fields = ['name','table_id','player_id','position',
+        'match_id','partner_id','team_id', ]
+
+
 class Board( BaseModel ):
     model = "og.board"
     fields = ['number','vulnerable','dealer','hands',
@@ -278,69 +292,26 @@ class Board( BaseModel ):
     def claim_ok(self,pos):
         return execute(self.sid,self.model,"claim_ok",self.id,pos)
 
-def test_board():
-
-    board = Board(usid,6)
-    self = board
-
-    def bid():
-        rec = board.read()
-        player = board.player
-        call = board.get_random_call()
-        print player, call
-        print board.bid(player,call)
-
-    def play():
-        self.read()
-        player = self.player
-        flag, pos, card = self.get_random_play()
-        print flag, pos, card
-        if flag:
-            self.play(pos, card)
-        else:
-            self.claim(pos, card)
-
-    def read():
-        self.read()
-        print 'deal', self.number, self.vulnerable, self.dealer
-        print 'hands',self.hands
-        print 'auction',self.auction
-        print 'contract',self.declarer, self.contract
-        print 'win',self.ns_win, self.ew_win
-        print 'tricks', self.tricks
-        print 'tricks', self.last_trick,self.current_trick
-        print 'result', self.result, self.point, self.ns_point,self.ew_point
-        print 'state,player',self.state,self.player
-
-    def claim():
-        self.read()
-        pos, num = self.get_random_claim()
-        pos = self.declarer
-        print pos, num
-        print self.claim(pos, num)
-        self.read()
-   
-    #claim()
-    def claim_ok_lho():
-        self.read()
-        pos = self.declarer
-        print self.claim_ok('S')
-    
-    def claim_ok_rho():
-        self.read()
-        pos = self.declarer
-        print self.claim_ok('N')
-    
-    #claim_ok_lho() 
-    #claim_ok_rho() 
-    #bid()
-    #play()
-    read()
-
 def test_partner():
 
     self = Partner(usid,1)
     print self.read()
+
+def test_user_play():
+    res = UserSudo().login('A24','123')
+    uid = res['uid']
+    
+    user = User(usid,uid)
+    user.read()
+    tid = user.todo_table_ids[0]
+    
+    
+    table = Table(usid,tid)
+    print table.read()
+    print table.new_board()
+    
+
+test_user_play()
 
 def test_user():
 
@@ -548,19 +519,6 @@ def test_match():
     print round.match_ids
     print Match(usid,round.match_ids).read()
 
-class Table( BaseModel ):
-    model = "og.table"
-    fields = ['name','number','room_type','match_id','game_id','round_id',
-        'date_from','date_thru','deal_ids', 'board_ids','board_id',
-        'ns_team_id','ew_team_id','table_player_ids','player_ids',
-        'east_id','west_id','north_id','south_id',
-        ]
-
-class TablePlayer( BaseModel ):
-    model = "og.table.player"
-    fields = ['name','table_id','player_id','position',
-        'match_id','partner_id','team_id', ]
-
 def test_table():
     game = Game(usid)
     def search_game(name):
@@ -644,4 +602,63 @@ def test_table_player():
     table = Table(usid, match.table_ids[0] )
     print table.read()
 
-test_table_player()
+
+def test_board():
+
+    board = Board(usid,6)
+    self = board
+
+    def bid():
+        rec = board.read()
+        player = board.player
+        call = board.get_random_call()
+        print player, call
+        print board.bid(player,call)
+
+    def play():
+        self.read()
+        player = self.player
+        flag, pos, card = self.get_random_play()
+        print flag, pos, card
+        if flag:
+            self.play(pos, card)
+        else:
+            self.claim(pos, card)
+
+    def read():
+        self.read()
+        print 'deal', self.number, self.vulnerable, self.dealer
+        print 'hands',self.hands
+        print 'auction',self.auction
+        print 'contract',self.declarer, self.contract
+        print 'win',self.ns_win, self.ew_win
+        print 'tricks', self.tricks
+        print 'tricks', self.last_trick,self.current_trick
+        print 'result', self.result, self.point, self.ns_point,self.ew_point
+        print 'state,player',self.state,self.player
+
+    def claim():
+        self.read()
+        pos, num = self.get_random_claim()
+        pos = self.declarer
+        print pos, num
+        print self.claim(pos, num)
+        self.read()
+   
+    #claim()
+    def claim_ok_lho():
+        self.read()
+        pos = self.declarer
+        print self.claim_ok('S')
+    
+    def claim_ok_rho():
+        self.read()
+        pos = self.declarer
+        print self.claim_ok('N')
+    
+    #claim_ok_lho() 
+    #claim_ok_rho() 
+    #bid()
+    #play()
+    read()
+

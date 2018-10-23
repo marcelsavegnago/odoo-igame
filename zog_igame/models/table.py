@@ -47,8 +47,12 @@ class Table(models.Model):
     board_id = fields.Many2one('og.board', help="The board played now")
     
     @api.multi
-    def new_board(self):
+    def get_board(self):
         self.ensure_one()
+        bd = self.board_ids.filtered(lambda bd: bd.state not in ['done','cancel'])
+        if bd:
+            return bd[0]
+        
         numbers = self.board_ids.mapped('number')
         deal_no = numbers and max(numbers) or 0
         deals = rec.deal_ids.filtered(lambda deal: deal.number > deal_no).sorted('number')
