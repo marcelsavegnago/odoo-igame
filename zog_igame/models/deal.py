@@ -91,6 +91,13 @@ class Deal(models.Model):
                     card.create({'name':cd[0],'pos':cd[1],
                                  'deal_id': rec.id })
 
+    @api.multi
+    def unlink(self):
+        if self.env['og.round'].search([['deal_ids','in', self.ids ]]):
+            return None
+        
+        return super(Deal, self).unlink()
+
 
 class DealCard(models.Model):
     _name = "og.deal.card"

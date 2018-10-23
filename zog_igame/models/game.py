@@ -152,7 +152,7 @@ class GameRound(models.Model):
         for rec in self:
             rec.name = rec.game_id.name + ' ' + str(rec.number)
 
-    deal_ids = fields.Many2many('og.deal',string='Deals')
+    deal_ids = fields.Many2many('og.deal',string='Deals', required=True, ondelete='restrict')
     match_ids = fields.One2many('og.match','round_id')
 
     #  for  game room
