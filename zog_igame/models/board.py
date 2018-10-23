@@ -194,7 +194,7 @@ class Board(models.Model):
             elif rec.state == 'openlead':
                 dclr = rec.declarer
                 rec.player = dclr and lho(dclr) or None
-            elif rec.state == 'playing':
+            elif rec.state in ['playing','claiming','claiming,LHO','claiming,RHO']:
                 rec.player = fn(rec)
             else:
                 rec.player = None
@@ -258,7 +258,9 @@ class Board(models.Model):
     @api.depends('ns_win','ew_win', 'ns_claim', 'ew_claim')
     def _compute_trick_cnt(self):
         for rec in self:
-            cnt = rec.ns_win + rec.ew_win + rec.ns_claim + rec.ew_claim
+            cnt = rec.ns_win + rec.ew_win
+            if rec.claimer and rec.state == 'done':
+                cnt += rec.ns_claim + rec.ew_claim
             rec.trick_count = cnt
 
     result = fields.Integer()
