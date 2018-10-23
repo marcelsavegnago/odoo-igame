@@ -87,7 +87,7 @@ class GameTeamRoundInfo(models.Model):
     #For Team Match
     group_id = fields.Many2one('og.game.group', related='team_id.group_id')
     round_id = fields.Many2one('og.game.round', string='Round', required=True, ondelete='restrict')
-    match_id = fields.Many2one('og.match', string='Match', ondelete='restrict')
+    match_id = fields.Many2one('og.match', string='Match', ondelete='cascade')
 
     #For Pair Match
     #position = fields.Selection(related='team_id.position')
