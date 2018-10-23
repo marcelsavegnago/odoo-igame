@@ -139,18 +139,18 @@ class Board(models.Model):
         if not pos:
             return -1, 'not pos'
         if pos not in ['WNES']:
-            return -1, 'not pos'
+            return -2, 'not pos'
         
         if self.state not in ['claiming','claiming,LHO','claiming,RHO']:
-            return -1, 'state not in claiming'
+            return -3, 'state not in claiming'
 
         if not self.declarer:
-            return -1, 'not declarer'
+            return -4, 'not declarer'
             
         dlcr = self.declarer
         
         if pos not in [lho(dclr), rho(dclr)]:
-            return -1, 'not pos'
+            return -5, 'not pos'
         
         opp = {lho(dclr):'LHO', rho(dclr):'RHO'}[pos]
         
@@ -159,7 +159,7 @@ class Board(models.Model):
             return 0
             
         if opp == self.state.split(',')[1]:
-            return -1, 'claim ok again'
+            return -6, 'claim ok again'
 
         self.state = 'done'
         self.result = self._get_result()

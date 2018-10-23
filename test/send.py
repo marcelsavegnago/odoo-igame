@@ -201,6 +201,9 @@ class Board( object ):
         
     def claim(self,pos,num):
         return execute(self.sid,self.model,"claim",self.id,pos,num)
+        
+    def claim_ok(self,pos):
+        return execute(self.sid,self.model,"claim_ok",self.id,pos)
 
 
 board = Board(usid,6)
@@ -268,9 +271,21 @@ def claim():
     print 'state,player',self.state,self.player
     print 'result', self.result, self.point, self.ns_point,self.ew_point
    
-claim()
- 
-#read()
+#claim()
+def claim_ok_lho():
+    self.read()
+    pos = self.declarer
+    print self.claim_ok('S')
+    print 'state,player',self.state,self.player
+    
+def claim_ok_rho():
+    self.read()
+    pos = self.declarer
+    print self.claim_ok('N')
+    print 'state,player',self.state,self.player
+    
+claim_ok_lho() 
+read()
 #bid()
 
 #play()
