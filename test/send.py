@@ -245,9 +245,7 @@ class Table( BaseModel ):
         'east_id','west_id','north_id','south_id',
         ]
 
-    def get_board(self ):
-        rec = execute(self.sid,self.model,"get_board",self.id)
-        return rec
+
 
 class TablePlayer( BaseModel ):
     model = "og.table.player"
@@ -298,24 +296,11 @@ class Board( BaseModel ):
 
 def test_partner():
 
-    self = Partner(usid,1)
-    print self.read()
-
-def test_user_play():
-    res = UserSudo().login('A24','123')
-    uid = res['uid']
-    
-    user = User(usid,uid)
-    user.read()
-    tid = user.todo_table_ids[0]
-    
-    
-    table = Table(usid,tid)
-    print table.read()
-    print table.get_board()
+    ptn = Partner(usid,1)
+    print ptn.read()
     
 
-test_user_play()
+test_partner()
 
 def test_user():
 
@@ -666,3 +651,17 @@ def test_board():
     #play()
     read()
 
+def test_user_play():
+    res = UserSudo().login('A24','123')
+    uid = res['uid']
+    
+    user = User(usid,uid)
+    user.read()
+    tid = user.todo_table_ids[0]
+    
+    
+    table = Table(usid,tid)
+    print table.read()
+    print table.board_id
+    
+test_user_play()

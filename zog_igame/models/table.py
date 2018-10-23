@@ -44,12 +44,16 @@ class Table(models.Model):
 
     deal_ids  = fields.Many2many('og.deal', string='Deals', related='round_id.deal_ids' )
     board_ids = fields.One2many('og.board', 'table_id', string='Boards')
-    board_id = fields.Many2one('og.board', help="The board played now")
+    board_id = fields.Many2one('og.board', compute='_compute_board',
+        help="The board played now")
     
     @api.multi
-    @api.returns('self')
-    def get_board(self):
-        self.ensure_one()
+    @api.depends('board_ids','deal_ids')
+    def _compute_board(self):
+        for rec in self:
+            rec.board_id = rec._get_board()
+    
+    def _get_board(self):
         bd = self.board_ids.filtered(lambda bd: bd.state not in ['done','cancel'])
         if bd:
             return bd[0]
