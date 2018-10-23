@@ -148,7 +148,7 @@ class Board(models.Model):
         if not self.declarer:
             return -4, 'not declarer'
             
-        dlcr = self.declarer
+        dclr = self.declarer
         
         if pos not in [lho(dclr), rho(dclr)]:
             return -5, 'not pos'
