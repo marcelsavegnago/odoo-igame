@@ -161,8 +161,8 @@ class MatchTeam(models.Model):
     _name = "og.match.team"
     _description = "Match Team"
     _order = 'id desc'
-    _rec_name = 'team_id'
-
+    
+    name = fields.Char(related='team_id.name')
     match_id = fields.Many2one('og.match', string='Match', ondelete='cascade')
     team_id = fields.Many2one('og.game.team', string='Team', ondelete='restrict')
     position = fields.Selection([

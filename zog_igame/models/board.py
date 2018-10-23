@@ -72,8 +72,8 @@ class Board(models.Model):
         ('cancel', 'Cancelled')
     ], string='Status', default='bidding')
 
-    table_id = fields.Many2one('og.table')
-    deal_id = fields.Many2one('og.deal')
+    table_id = fields.Many2one('og.table', required=True, ondelete='restrict')
+    deal_id = fields.Many2one('og.deal', required=True, ondelete='restrict')
     card_str = fields.Char(related='deal_id.card_str')
 
 

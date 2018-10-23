@@ -19,7 +19,6 @@ class GameTeam(models.Model):
     _name = "og.game.team"
     _description = "Game Team"
     _order = 'id desc'
-    _rec_name = 'partner_id'
     _inherits = {'res.partner': 'partner_id'}
 
     @api.model
@@ -81,7 +80,7 @@ class GameTeamRoundInfo(models.Model):
     _description = "Team Round Infomation"
 
 
-    #name = fields.Char()
+    name = fields.Char()
     team_id = fields.Many2one('og.game.team', string='Team', required=True, ondelete='restrict')
     game_id = fields.Many2one('og.game', related='team_id.game_id')
 
