@@ -20,8 +20,8 @@ class BoardCall(models.Model):
     board_id = fields.Many2one('og.board',required=True, ondelete='cascade')
 
     number = fields.Integer()
-    pos   = fields.Selection(POSITIONS)
-    name  = fields.Selection(CALLS)
+    pos   = fields.Selection(POSITIONS, required=True )
+    name  = fields.Selection(CALLS, required=True)
 
     rank  = fields.Integer( compute='_compute_call')
     trump = fields.Selection(TRUMPS, compute='_compute_call')

@@ -24,7 +24,7 @@ class BoardCard(models.Model):
     pos  = fields.Selection(POSITIONS,related='deal_card_id.pos')
     position  = fields.Selection(POSITIONS,related='deal_card_id.pos')
 
-    number = fields.Integer()
+    number = fields.Integer(default=0)
     trickno = fields.Integer(compute='_compute_number')
     cardno  = fields.Integer(compute='_compute_number')
 

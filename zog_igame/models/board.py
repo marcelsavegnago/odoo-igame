@@ -72,6 +72,9 @@ class Board(models.Model):
     ], string='Status', default='bidding')
 
     table_id = fields.Many2one('og.table', required=True, ondelete='restrict')
+    round_id = fields.Many2one('og.game.round', related='table_id.round_id')
+    game_id = fields.Many2one('og.game', related='round_id.game_id')
+
     deal_id = fields.Many2one('og.deal', required=True, ondelete='restrict')
     card_str = fields.Char(related='deal_id.card_str')
 
