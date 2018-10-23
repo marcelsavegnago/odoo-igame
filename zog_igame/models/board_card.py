@@ -15,7 +15,7 @@ class BoardCard(models.Model):
     _order = 'board_id desc, number, id'
 
     board_id = fields.Many2one('og.board',  required=True, ondelete='cascade')
-    deal_card_id = fields.Many2one('og.deal.card', required=True, ondelete='cascade')
+    deal_card_id = fields.Many2one('og.deal.card', required=True, ondelete='restrict')
 
     deal_id = fields.Many2one('og.deal', related='deal_card_id.deal_id')
     name = fields.Selection(CARDS,related='deal_card_id.name')
