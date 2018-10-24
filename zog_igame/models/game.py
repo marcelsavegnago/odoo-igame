@@ -169,16 +169,32 @@ class GameRound(models.Model):
             rec.table_ids = open | close
 
     state = fields.Selection([
-        ('done',  'Done'),
+        ('draft',  'Draft'),
+        ('todo',  'Todo'),
         ('doing', 'Doing'),
-        ('todo',  'Todo'), ], string='Status', compute='_get_state')
+        ('done',  'Done'),
+        ('cancel', 'Cancelled')
+    ], string='Status', compute='_compute_state')
 
     @api.multi
-    def _get_state(self):
-        now = fields.Datetime.now()
+    @api.depends('board_ids','deal_ids')
+    def _compute_state(self):
         for rec in self:
-            frm = rec.date_from
-            thru = rec.date_thru
-            rec.state = now < frm and now < thru and 'todo' or (
-                        now >= frm and now >= thru and 'done' or 'doing' )
+            rec.state = rec._get_state()
+
+    def _get_state(self):
+        ts = self.table_ids
+        if not ts:
+            return 'draft'
+        
+        tts = ts.filtered(lambda t: t.state not in ['done','cancel'])
+        if not tts:
+            return 'done'
+        
+        tts = ts.filtered(lambda t: t.state in ['doing'])
+        return tts and 'doing' or 'todo'
+
+
+
+
 

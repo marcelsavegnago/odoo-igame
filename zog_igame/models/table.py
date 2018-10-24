@@ -65,6 +65,38 @@ class Table(models.Model):
             return self.env['og.board']
         deal = deals[0]
         return self.env['og.board'].create({'deal_id': deal.id, 'table_id':self.id})
+
+    state = fields.Selection([
+        ('draft',  'Draft'),
+        ('todo',  'Todo'),
+        ('doing', 'Doing'),
+        ('done',  'Done'),
+        ('cancel', 'Cancelled')
+    ], string='Status', compute='_compute_state')
+
+    @api.multi
+    @api.depends('board_ids','deal_ids')
+    def _compute_state(self):
+        for rec in self:
+            rec.state = rec._get_state()
+
+    def _get_state(self):
+        if not self.deal_ids:
+            return 'draft'
+        
+        bd_num = self.board_ids.mapped('number')
+        dl_num   = self.deal_ids.mapped('number')
+        bd_num = list(set(bd_num))
+        dl_num = list(set(dl_num))
+        bd_num = list.sort(bd_num)
+        dl_num = list.sort(dl_num)
+        
+        if cmp(dl_num, bd_num) > 0:
+            return bd_num and 'doing' or 'todo'
+        
+        bd = self.board_ids.filtered(lambda bd: bd.state not in ['done','cancel'])
+        return bd and 'doing' or 'done'
+
             
 
     ns_team_id = fields.Many2one('og.game.team', compute='_compute_team')
@@ -170,7 +202,6 @@ class Partner(models.Model):
     
     team_player_ids = fields.One2many('og.game.team.player','partner_id' )
 
-    doing_table_id = fields.Many2one('og.table', compute='_get_table')
     todo_table_ids = fields.One2many('og.table', compute='_get_table')
     done_table_ids = fields.One2many('og.table', compute='_get_table')
     
@@ -180,13 +211,8 @@ class Partner(models.Model):
             
             table_ids = rec.team_player_ids.mapped('table_player_ids').mapped('table_id')
             
-            doing = table_ids.filtered(
-                    lambda tbl: tbl.state == 'doing').sorted('id',reverse=True)
-            if doing:     
-                rec.doing_table_id = doing[0]
-
             rec.todo_table_ids = table_ids.filtered(
-                    lambda tbl: tbl.state == 'todo').sorted('date_from')
+                    lambda tbl: tbl.state in ['todo','doing']).sorted('date_from')
                     
             rec.done_table_ids = table_ids.filtered(
                     lambda tbl: tbl.state == 'done').sorted('date_from')

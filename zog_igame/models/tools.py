@@ -36,4 +36,11 @@ def imp2vp(imp,deal_count):
 
     return imp>0 and 10+z or 10-z
 
-
+if __name__ == '__main__':
+    def fn(imp,num):
+        print( imp, num, imp2vp(imp,num) )
+        
+    fn(20,2000)
+    fn(20,80)
+    fn(20,8)
+    fn(20,16)

@@ -298,9 +298,6 @@ def test_partner():
 
     ptn = Partner(usid,1)
     print ptn.read()
-    
-
-test_partner()
 
 def test_user():
 
@@ -592,9 +589,22 @@ def test_table_player():
     print table.read()
 
 
-def test_board():
+def test_user_play():
+    res = UserSudo().login('A24','123')
+    uid = res['uid']
+    
+    user = User(usid,uid)
+    user.read()
+    tid = user.todo_table_ids[0]
+    table = Table(usid,tid)
+    print table.read()
+    print table.board_id
+    
+    return table.board_id
 
-    board = Board(usid,6)
+def test_board(bdid=None):
+
+    board = Board(usid,bdid)
     self = board
 
     def bid():
@@ -650,18 +660,10 @@ def test_board():
     #bid()
     #play()
     read()
+    
+    return self.state
 
-def test_user_play():
-    res = UserSudo().login('A24','123')
-    uid = res['uid']
     
-    user = User(usid,uid)
-    user.read()
-    tid = user.todo_table_ids[0]
-    
-    
-    table = Table(usid,tid)
-    print table.read()
-    print table.board_id
-    
-test_user_play()
+bdid = test_user_play()
+
+state = test_board(bdid)
