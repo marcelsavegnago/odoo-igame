@@ -105,10 +105,11 @@ class Board(models.Model):
 
         self.claimer = pos
         self.claim_result = num
+        self.state = 'claiming'
 
-        if self.trick_count>=13:
-            self.state = 'claiming'
-            #self.result = self._get_result()
+        #if self.trick_count>=13:
+        #    self.state = 'claiming'
+        #    #self.result = self._get_result()
 
         return 0
 
@@ -138,15 +139,14 @@ class Board(models.Model):
     @api.multi
     def claim_ok(self,pos, ok=None):
         """ claim ok, not ok """
+        if self.state not in ['claiming','claiming.LHO','claiming.RHO']:
+            return -3, 'state not in claiming'
         
         if not pos:
             return -1, 'not pos'
         if pos not in 'WNES':
             return -2, 'not pos'
         
-        if self.state not in ['claiming','claiming.LHO','claiming.RHO']:
-            return -3, 'state not in claiming'
-
         if not self.declarer:
             return -4, 'not declarer'
             
@@ -154,6 +154,9 @@ class Board(models.Model):
         
         if pos not in [lho(dclr), rho(dclr)]:
             return -5, 'not pos'
+        
+        if not ok:
+            self.state = 'playing'
         
         opp = {lho(dclr):'LHO', rho(dclr):'RHO'}[pos]
         
@@ -168,7 +171,6 @@ class Board(models.Model):
         self.result = self._get_result()
         
         return 0
-
 
     @api.multi
     def undo(self):

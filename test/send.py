@@ -180,7 +180,7 @@ class Partner( BaseModel ):
 
 class User( BaseModel ):
     model = "res.users"
-    fields = ['name','doing_table_id','todo_table_ids','done_table_ids']
+    fields = ['name','todo_table_ids','done_table_ids']
 
 class Game( BaseModel ):
     model = "og.game"
@@ -259,6 +259,7 @@ class Board( BaseModel ):
             'auction',
             'declarer',
             'contract',
+            'openlead',
             'tricks',
             'last_trick',
             'current_trick',
@@ -597,10 +598,10 @@ def test_user_play():
     user.read()
     tid = user.todo_table_ids[0]
     table = Table(usid,tid)
-    print table.read()
+    table.read()
     print table.board_id
     
-    return table.board_id
+    return table.board_id[0]
 
 def test_board(bdid=None):
 
@@ -629,7 +630,7 @@ def test_board(bdid=None):
         print 'deal', self.number, self.vulnerable, self.dealer
         print 'hands',self.hands
         print 'auction',self.auction
-        print 'contract',self.declarer, self.contract
+        print 'contract',self.declarer, self.contract, self.openlead
         print 'win',self.ns_win, self.ew_win
         print 'tricks', self.tricks
         print 'tricks', self.last_trick,self.current_trick
@@ -648,17 +649,17 @@ def test_board(bdid=None):
     def claim_ok_lho():
         self.read()
         pos = self.declarer
-        print self.claim_ok('S')
+        print self.claim_ok('S',1)
     
     def claim_ok_rho():
         self.read()
         pos = self.declarer
-        print self.claim_ok('N')
+        print self.claim_ok('N',1)
     
     #claim_ok_lho() 
     #claim_ok_rho() 
     #bid()
-    #play()
+    play()
     read()
     
     return self.state
