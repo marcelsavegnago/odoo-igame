@@ -81,15 +81,20 @@ class Table(models.Model):
             rec.state = rec._get_state()
 
     def _get_state(self):
-        if not self.deal_ids:
-            return 'draft'
-        
         bd_num = self.board_ids.mapped('number')
-        dl_num   = self.deal_ids.mapped('number')
+        dl_num = self.deal_ids.mapped('number')
+
+        if not dl_num:
+            return 'draft'
+
+        if not bd_num:
+            return 'todo'
+        
         bd_num = list(set(bd_num))
         dl_num = list(set(dl_num))
-        bd_num = list.sort(bd_num)
-        dl_num = list.sort(dl_num)
+        
+        list.sort(bd_num)
+        list.sort(dl_num)
         
         if cmp(dl_num, bd_num) > 0:
             return bd_num and 'doing' or 'todo'
