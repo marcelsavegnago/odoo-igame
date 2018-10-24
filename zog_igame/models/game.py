@@ -177,7 +177,7 @@ class GameRound(models.Model):
     ], string='Status', compute='_compute_state')
 
     @api.multi
-    @api.depends('board_ids','deal_ids')
+    @api.depends('table_ids','deal_ids')
     def _compute_state(self):
         for rec in self:
             rec.state = rec._get_state()
