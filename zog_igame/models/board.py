@@ -315,12 +315,9 @@ class Board(models.Model):
             rec.point, rec.ns_point, rec.ew_point = rec._get_point()
 
     def _get_point(self):
-        if not self.contract:
+        if self.state != 'done':
             return 0, 0, 0
-
-        if self.trick_count<13:
-            return 0, 0, 0
-
+        
         if self.contract == PASS:
             return 0, 0, 0
 

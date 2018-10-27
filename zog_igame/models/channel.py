@@ -9,60 +9,91 @@ _logger = logging.getLogger(__name__)
 
 class Board(models.Model):
     _inherit = "og.board"
+    
+    def _get_info(self):
+        return {
+            'id': self.id,
+            'number':self.number,
+            'vulnerable':self.vulnerable,
+            'dealer':self.dealer,
+            'hands': self.hands,
+            'declarer': rec.declarer,
+            'contract': rec.contract,
+            'openlead': rec.openlead,
+            'result': rec.result,
+            'ns_point': rec.ns_point,
+            'ew_point': rec.ew_point,
+            
+            'auction': rec.auction,
+            'ns_win': rec.ns_win,
+            'ew_win': rec.ew_win,
+            'last_trick': rec.last_trick,
+            'current_trick': rec.current_trick,
+            'tricks': rec.tricks,
 
-    @api.multi
-    def _get_my_pos(self):
-        self.ensure_one()
-        tp = self.table_id.table_player_ids.filtered(
-                       lambda tp: tp.partner_id == self.env.user.partner_id)
-        return tp and tp.position or None
-
-
-    def message_post(self, subject, message):
+            'player': rec.player,
+            'state': rec.state,
+        }
+    
+    def message_post(self, method, args, info):
+        message = {
+            'id': self.id,
+            'method': method, 
+            'args': args,
+            'info': info
+        }
+    
         for channel in self.table_id.channel_ids:
-            body = json.dumps(message)
-            channel.message_post(body=body, subject=subject )
+            channel.message_post(subject = method,
+                body = json.dumps(body) )
 
     @api.multi
     def bid(self, pos, call):
-        #self = self.sudo()
         ret = super(Board, self).bid(pos, call)
-        if ret:
-            return ret
-
-        for rec in self:
-            subject = 'bid'
-            message  = {
-                'table_id': rec.table_id.id,
-                'board_id': rec.id,
-                'bidder': rec.bidder,
-                'auction': rec.call_ids.read(['pos','name'])
-            }
-            rec.message_post(subject,message)
+        if not ret:
+            for rec in self:
+                info = rec._get_info()
+                rec.message_post('bid', [pos, call], info)
 
         return ret
 
     @api.multi
     def play(self,pos,card):
         ret = super(Board, self).play(pos, card)
-        if ret:
-            return ret
-        
+        if not ret:
+            for rec in self:
+                info = rec._get_info()
+                rec.message_post('play', [pos, card], info)
+
         return ret
 
     @api.multi
     def claim(self,pos,num):
         ret = super(Board, self).claim(pos, num)
-        if ret:
-            return ret
-        
+        if not ret:
+            for rec in self:
+                info = rec._get_info()
+                rec.message_post('claim', [pos, num], info)
+
+        return ret
+
+    @api.multi
+    def claim_ok(self,pos,ok):
+        ret = super(Board, self).claim_ok(pos, ok)
+        if not ret:
+            for rec in self:
+                info = rec._get_info()
+                rec.message_post('claim_ok', [pos, ok], info)
+
         return ret
 
     @api.multi
     def undo(self):
         ret = super(Board, self).undo()
         if not ret:
-            return ret
+            for rec in self:
+                info = rec._get_info()
+                rec.message_post('undo', [], info)
         
         return ret
 
@@ -90,16 +121,18 @@ class GameChannel(models.Model):
                              ], default='all')
 
 
+    def _transposition(self, body ):
+        board_id = body['id']
+        board = self.env['og.board'].browse(board_id)
+        tp = board.table_id.table_player_ids.filtered(
+            lambda tp: tp.partner_id == self.env.user.partner_id)
+        my_pos = tp and tp.position or None
+        info = body['info']
+        uid = self.env.uid
+        return body
 
     @api.multi
     def message_get(self, message_id ):
-        """
-        Who am I?
-        """
-        uid = self.env.uid
-        print('uid',uid)
-        self = self.sudo()
-        print('uid2',self.env.uid)
         msg = self.env['mail.message'].browse(message_id)
         #subject = msg.subject
         body = msg.body
@@ -107,6 +140,10 @@ class GameChannel(models.Model):
             body = body[3:-4]
 
         body = json.loads(body)
+        body = self._transposition(body)
+        
+        uid = self.env.uid
+        
         body = {'uid':uid, 'board': body}
 
         return json.dumps(body)
